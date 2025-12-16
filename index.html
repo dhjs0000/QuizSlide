@@ -52,14 +52,21 @@
         </main>
         
         <footer>
-            <div class="built-in-banks">
-                <label>内置题库:</label>
-                <select id="built-in-selector">
-                    <option value="">选择内置题库</option>
-                    <option value="sample">基础词汇 (100词)</option>
-                    <option value="junior">初中重点单词 (792词)</option>
-                </select>
-                <button id="load-built-in" class="control-btn">加载题库</button>
+            <div class="bank-management">
+                <h3>题库管理</h3>
+                <div class="available-banks">
+                    <label>可用题库:</label>
+                    <div id="bank-list" class="bank-list">
+                        <!-- 动态加载的题库列表 -->
+                    </div>
+                </div>
+                <div class="selected-banks">
+                    <label>已选择题库:</label>
+                    <div id="selected-bank-list" class="selected-bank-list">
+                        <!-- 已选择的题库 -->
+                    </div>
+                </div>
+                <button id="load-selected-banks" class="control-btn">加载选中题库</button>
             </div>
             <div class="file-upload">
                 <label for="csv-file">或上传自定义题库文件:</label>

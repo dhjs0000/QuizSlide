@@ -188,8 +188,160 @@ class QuizApp {
         this.currentAppMode = APP_MODES.LECTURE; // 当前应用模式
         this.currentQuizOptions = []; // 当前答题模式的选项
         this.selectedOption = null; // 用户选择的选项
+        this.availableBanks = []; // 可用题库列表
+        this.selectedBanks = []; // 已选择的题库
+        this.bankQuestions = {}; // 存储各个题库的题目 {bankName: questions}
         
         this.initializeEventListeners();
+    }
+    
+    // 初始化题库管理
+    initializeBankManagement = () => {
+        // 加载选中题库按钮
+        document.getElementById('load-selected-banks').addEventListener('click', () => {
+            this.loadSelectedBanks();
+        });
+        
+        // 初始化题库列表
+        this.loadAvailableBanks();
+    }
+    
+    // 加载可用题库
+    loadAvailableBanks = async () => {
+        try {
+            // 获取data目录下的所有CSV文件
+            const csvFiles = await loadCSVFileList();
+            
+            // 添加示例题库
+            this.availableBanks = [
+                { fileName: 'sample', displayName: '基础词汇 (100词)', type: 'built-in' },
+                ...csvFiles.map(file => ({
+                    fileName: file.fileName,
+                    displayName: file.displayName,
+                    type: 'file'
+                }))
+            ];
+            
+            this.displayAvailableBanks();
+        } catch (error) {
+            console.error('加载可用题库失败:', error);
+            this.showMessage('加载题库列表失败', 'error');
+        }
+    }
+    
+    // 显示可用题库
+    displayAvailableBanks = () => {
+        const bankList = document.getElementById('bank-list');
+        bankList.innerHTML = '';
+        
+        this.availableBanks.forEach((bank, index) => {
+            const bankItem = document.createElement('div');
+            bankItem.className = 'bank-item';
+            bankItem.textContent = bank.displayName;
+            bankItem.addEventListener('click', () => {
+                this.toggleBankSelection(index);
+            });
+            bankList.appendChild(bankItem);
+        });
+    }
+    
+    // 切换题库选择状态
+    toggleBankSelection = (index) => {
+        const bank = this.availableBanks[index];
+        const bankItems = document.querySelectorAll('.bank-list .bank-item');
+        const bankItem = bankItems[index];
+        
+        if (this.selectedBanks.find(b => b.fileName === bank.fileName)) {
+            // 取消选择
+            this.selectedBanks = this.selectedBanks.filter(b => b.fileName !== bank.fileName);
+            bankItem.classList.remove('selected');
+        } else {
+            // 选择题库
+            this.selectedBanks.push(bank);
+            bankItem.classList.add('selected');
+        }
+        
+        this.displaySelectedBanks();
+    }
+    
+    // 显示已选择的题库
+    displaySelectedBanks = () => {
+        const selectedList = document.getElementById('selected-bank-list');
+        selectedList.innerHTML = '';
+        
+        if (this.selectedBanks.length === 0) {
+            selectedList.innerHTML = '<div style="color: #7f8c8d; text-align: center; padding: 10px;">请选择至少一个题库</div>';
+            return;
+        }
+        
+        this.selectedBanks.forEach(bank => {
+            const bankItem = document.createElement('div');
+            bankItem.className = 'bank-item selected';
+            bankItem.textContent = bank.displayName;
+            selectedList.appendChild(bankItem);
+        });
+    }
+    
+    // 加载选中的题库
+    loadSelectedBanks = async () => {
+        if (this.selectedBanks.length === 0) {
+            this.showMessage('请至少选择一个题库！', 'error');
+            return;
+        }
+        
+        try {
+            let allQuestions = [];
+            
+            // 加载所有选中的题库
+            for (const bank of this.selectedBanks) {
+                let questions;
+                
+                if (bank.type === 'built-in' && bank.fileName === 'sample') {
+                    // 加载内置示例题库
+                    const response = await fetch('sample-words.csv');
+                    const content = await response.text();
+                    questions = CSVParser.parseCSV(content);
+                } else if (bank.type === 'file') {
+                    // 加载文件题库
+                    const response = await fetch(`data/${bank.fileName}`);
+                    const content = await response.text();
+                    questions = CSVParser.parseCSV(content);
+                }
+                
+                if (questions && questions.length > 0) {
+                    // 为每个题目添加题库来源信息
+                    const questionsWithSource = questions.map(q => ({
+                        ...q,
+                        source: bank.displayName
+                    }));
+                    allQuestions = allQuestions.concat(questionsWithSource);
+                }
+            }
+            
+            if (allQuestions.length > 0) {
+                // 打乱题目顺序
+                allQuestions = this.shuffleArray(allQuestions);
+                
+                // 加载到题库管理器
+                this.questionBank.loadQuestions(allQuestions);
+                this.nextQuestion();
+                this.showMessage(`成功加载 ${this.selectedBanks.length} 个题库，共 ${allQuestions.length} 道题目！`, 'success');
+            } else {
+                this.showMessage('题库加载失败，没有找到题目！', 'error');
+            }
+        } catch (error) {
+            this.showMessage('题库加载失败：' + error.message, 'error');
+        }
+    }
+    
+    // 打乱数组
+    shuffleArray = (array) => {
+        const shuffled = [...array];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+        return shuffled;
     }
     
     // 初始化事件监听器
@@ -201,10 +353,8 @@ class QuizApp {
             });
         });
         
-        // 内置题库加载
-        document.getElementById('load-built-in').addEventListener('click', () => {
-            this.loadBuiltInBank();
-        });
+        // 多选题库管理
+        this.initializeBankManagement();
         
         // 文件上传
         document.getElementById('csv-file').addEventListener('change', (e) => {
@@ -279,6 +429,155 @@ class QuizApp {
             }
         } catch (error) {
             this.showMessage('题库加载失败：' + error.message, 'error');
+        }
+        
+        // 初始化题库管理
+        initializeBankManagement = () => {
+            // 加载选中题库按钮
+            document.getElementById('load-selected-banks').addEventListener('click', () => {
+                this.loadSelectedBanks();
+            });
+            
+            // 初始化题库列表
+            this.loadAvailableBanks();
+        }
+        
+        // 加载可用题库
+        loadAvailableBanks = async () => {
+            try {
+                // 获取data目录下的所有CSV文件
+                const csvFiles = await loadCSVFileList();
+                
+                // 添加示例题库
+                this.availableBanks = [
+                    { fileName: 'sample', displayName: '基础词汇 (100词)', type: 'built-in' },
+                    ...csvFiles.map(file => ({
+                        fileName: file.fileName,
+                        displayName: file.displayName,
+                        type: 'file'
+                    }))
+                ];
+                
+                this.displayAvailableBanks();
+            } catch (error) {
+                console.error('加载可用题库失败:', error);
+                this.showMessage('加载题库列表失败', 'error');
+            }
+        }
+        
+        // 显示可用题库
+        displayAvailableBanks = () => {
+            const bankList = document.getElementById('bank-list');
+            bankList.innerHTML = '';
+            
+            this.availableBanks.forEach((bank, index) => {
+                const bankItem = document.createElement('div');
+                bankItem.className = 'bank-item';
+                bankItem.textContent = bank.displayName;
+                bankItem.addEventListener('click', () => {
+                    this.toggleBankSelection(index);
+                });
+                bankList.appendChild(bankItem);
+            });
+        }
+        
+        // 切换题库选择状态
+        toggleBankSelection = (index) => {
+            const bank = this.availableBanks[index];
+            const bankItems = document.querySelectorAll('.bank-list .bank-item');
+            const bankItem = bankItems[index];
+            
+            if (this.selectedBanks.find(b => b.fileName === bank.fileName)) {
+                // 取消选择
+                this.selectedBanks = this.selectedBanks.filter(b => b.fileName !== bank.fileName);
+                bankItem.classList.remove('selected');
+            } else {
+                // 选择题库
+                this.selectedBanks.push(bank);
+                bankItem.classList.add('selected');
+            }
+            
+            this.displaySelectedBanks();
+        }
+        
+        // 显示已选择的题库
+        displaySelectedBanks = () => {
+            const selectedList = document.getElementById('selected-bank-list');
+            selectedList.innerHTML = '';
+            
+            if (this.selectedBanks.length === 0) {
+                selectedList.innerHTML = '<div style="color: #7f8c8d; text-align: center; padding: 10px;">请选择至少一个题库</div>';
+                return;
+            }
+            
+            this.selectedBanks.forEach(bank => {
+                const bankItem = document.createElement('div');
+                bankItem.className = 'bank-item selected';
+                bankItem.textContent = bank.displayName;
+                selectedList.appendChild(bankItem);
+            });
+        }
+        
+        // 加载选中的题库
+        loadSelectedBanks = async () => {
+            if (this.selectedBanks.length === 0) {
+                this.showMessage('请至少选择一个题库！', 'error');
+                return;
+            }
+            
+            try {
+                let allQuestions = [];
+                
+                // 加载所有选中的题库
+                for (const bank of this.selectedBanks) {
+                    let questions;
+                    
+                    if (bank.type === 'built-in' && bank.fileName === 'sample') {
+                        // 加载内置示例题库
+                        const response = await fetch('sample-words.csv');
+                        const content = await response.text();
+                        questions = CSVParser.parseCSV(content);
+                    } else if (bank.type === 'file') {
+                        // 加载文件题库
+                        const response = await fetch(`data/${bank.fileName}`);
+                        const content = await response.text();
+                        questions = CSVParser.parseCSV(content);
+                    }
+                    
+                    if (questions && questions.length > 0) {
+                        // 为每个题目添加题库来源信息
+                        const questionsWithSource = questions.map(q => ({
+                            ...q,
+                            source: bank.displayName
+                        }));
+                        allQuestions = allQuestions.concat(questionsWithSource);
+                    }
+                }
+                
+                if (allQuestions.length > 0) {
+                    // 打乱题目顺序
+                    allQuestions = this.shuffleArray(allQuestions);
+                    
+                    // 加载到题库管理器
+                    this.questionBank.loadQuestions(allQuestions);
+                    this.nextQuestion();
+                    this.showMessage(`成功加载 ${this.selectedBanks.length} 个题库，共 ${allQuestions.length} 道题目！`, 'success');
+                } else {
+                    this.showMessage('题库加载失败，没有找到题目！', 'error');
+                }
+            } catch (error) {
+                this.showMessage('题库加载失败：' + error.message, 'error');
+            }
+        }
+        
+        // 打乱数组
+        shuffleArray = (array) => {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
         }
     }
     
