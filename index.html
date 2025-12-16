@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>单词答题游戏</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>单词答题游戏</h1>
+            <div class="app-mode-selector">
+                <button id="lecture-mode" class="app-mode-btn active">讲台模式</button>
+                <button id="quiz-mode" class="app-mode-btn">答题模式</button>
+            </div>
+            <div class="mode-selector">
+                <button id="chinese-to-english" class="mode-btn active">中文→英文</button>
+                <button id="english-to-chinese" class="mode-btn">英文→中文</button>
+                <button id="random-mode" class="mode-btn">随机模式</button>
+            </div>
+        </header>
+        
+        <main>
+            <div class="question-area">
+                <div id="question" class="question-text">点击开始答题</div>
+                <div id="answer" class="answer-text hidden"></div>
+            </div>
+            
+            <!-- 讲台模式控制 -->
+            <div class="lecture-controls">
+                <button id="show-answer" class="control-btn">显示答案</button>
+                <button id="next-question" class="control-btn">下一题</button>
+            </div>
+            
+            <!-- 答题模式控制 -->
+            <div class="quiz-controls" style="display: none;">
+                <div class="options-container">
+                    <button class="option-btn" id="option-a"></button>
+                    <button class="option-btn" id="option-b"></button>
+                    <button class="option-btn" id="option-c"></button>
+                    <button class="option-btn" id="option-d"></button>
+                </div>
+                <div class="quiz-result" id="quiz-result"></div>
+                <button id="next-quiz-question" class="control-btn">下一题</button>
+            </div>
+            
+            <div class="stats">
+                <span>已答题: <span id="answered-count">0</span></span>
+                <span>剩余: <span id="remaining-count">0</span></span>
+            </div>
+        </main>
+        
+        <footer>
+            <div class="built-in-banks">
+                <label>内置题库:</label>
+                <select id="built-in-selector">
+                    <option value="">选择内置题库</option>
+                    <option value="sample">基础词汇 (100词)</option>
+                    <option value="junior">初中重点单词 (792词)</option>
+                </select>
+                <button id="load-built-in" class="control-btn">加载题库</button>
+            </div>
+            <div class="file-upload">
+                <label for="csv-file">或上传自定义题库文件:</label>
+                <input type="file" id="csv-file" accept=".csv">
+            </div>
+        </footer>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>
