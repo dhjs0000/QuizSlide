@@ -310,6 +310,8 @@ class QuizApp {
         this.bankQuestions = {}; // 存储各个题库的题目 {bankName: questions}
         this.challengeSelectedOption = null; // 挑战模式用户选择的选项
         this.challengeCurrentOptions = []; // 挑战模式当前选项
+        this.autoNextTimer = null; // 自动下一题定时器
+        this.autoSwitchTime = 0.3; // 默认自动切换时间（秒）
         
         this.initializeEventListeners();
     }
@@ -334,6 +336,14 @@ class QuizApp {
                 this.handleChallengeModeSelect(e.target.dataset.mode);
             });
         });
+        
+        // 自动切换时间设置
+        const autoSwitchSelect = document.getElementById('auto-switch-time');
+        if (autoSwitchSelect) {
+            autoSwitchSelect.addEventListener('change', (e) => {
+                this.autoSwitchTime = parseFloat(e.target.value);
+            });
+        }
         
         // 挑战模式选项按钮
         document.querySelectorAll('#challenge-option-a, #challenge-option-b, #challenge-option-c, #challenge-option-d').forEach((btn, index) => {
@@ -624,6 +634,38 @@ class QuizApp {
         // 重置挑战模式状态
         this.challengeMode.stop();
         this.challengeSelectedOption = null;
+        
+        // 清理挑战模式界面状态
+        this.clearChallengeInterface();
+    }
+    
+    // 清理挑战模式界面状态
+    clearChallengeInterface() {
+        // 清理计时器和分数显示
+        const timerElement = document.getElementById('challenge-time');
+        const scoreElement = document.getElementById('challenge-score');
+        if (timerElement) timerElement.textContent = '00:00';
+        if (scoreElement) scoreElement.textContent = '0';
+        
+        // 清理选项按钮
+        const optionButtons = document.querySelectorAll('#challenge-option-a, #challenge-option-b, #challenge-option-c, #challenge-option-d');
+        optionButtons.forEach(btn => {
+            btn.textContent = '';
+            btn.className = 'option-btn';
+            btn.disabled = false;
+        });
+        
+        // 清理结果显示
+        const resultElement = document.getElementById('challenge-result');
+        if (resultElement) {
+            resultElement.textContent = '';
+            resultElement.style.display = 'none';
+            resultElement.className = 'quiz-result';
+        }
+        
+        // 清理题目显示
+        document.getElementById('question').textContent = '在下方选择题库后开始答题';
+        document.getElementById('answer').textContent = '';
     }
     
     // 处理挑战模式选择
@@ -635,8 +677,10 @@ class QuizApp {
         this.hideChallengeModeSelection();
         this.showChallengeQuizInterface();
         
-        // 开始第一题
-        this.nextChallengeQuestion();
+        // 延迟开始第一题，确保界面完全切换
+        setTimeout(() => {
+            this.nextChallengeQuestion();
+        }, 100);
     }
     
     // 显示挑战模式选择界面
@@ -666,9 +710,14 @@ class QuizApp {
     // 挑战模式下一题
     nextChallengeQuestion() {
         this.challengeSelectedOption = null;
+        
+        // 清理上一题的状态
+        this.clearPreviousChallengeQuestion();
+        
         const hasNextQuestion = this.nextQuestion();
         
         if (hasNextQuestion && this.currentQuestion) {
+            // 立即显示下一题，不延迟
             this.displayChallengeQuestion();
         } else {
             // 挑战结束，显示结果
@@ -676,10 +725,39 @@ class QuizApp {
         }
     }
     
+    // 清理上一题的挑战模式状态
+    clearPreviousChallengeQuestion() {
+        // 停止自动下一题的定时器（如果存在）
+        if (this.autoNextTimer) {
+            clearTimeout(this.autoNextTimer);
+            this.autoNextTimer = null;
+        }
+        
+        // 清理选项按钮状态
+        const optionButtons = document.querySelectorAll('#challenge-option-a, #challenge-option-b, #challenge-option-c, #challenge-option-d');
+        optionButtons.forEach(btn => {
+            btn.className = 'option-btn';
+            btn.disabled = false;
+            btn.style.display = 'flex'; // 确保按钮可见
+        });
+        
+        // 隐藏结果
+        const resultElement = document.getElementById('challenge-result');
+        if (resultElement) {
+            resultElement.textContent = '';
+            resultElement.style.display = 'none';
+            resultElement.className = 'quiz-result';
+        }
+    }
+    
     // 显示挑战模式题目
     displayChallengeQuestion() {
+        if (!this.currentQuestion) return;
+        
         const questionText = this.quizMode.getQuestionText(this.currentQuestion);
         document.getElementById('question').textContent = questionText;
+        
+        // 确保选项生成完成后再显示
         this.generateChallengeOptions();
     }
     
@@ -690,8 +768,18 @@ class QuizApp {
         const correctAnswer = this.quizMode.getAnswerText(this.currentQuestion);
         const wrongAnswers = this.generateWrongAnswers(correctAnswer);
         
+        // 确保有足够多的错误答案
+        if (wrongAnswers.length < 3) {
+            // 如果题库中的错误答案不够，生成一些默认的错误答案
+            const defaultWrongAnswers = ['暂无', '暂无', '暂无', '暂无', '未知答案'];
+            const additionalAnswers = defaultWrongAnswers.filter(ans =>
+                ans !== correctAnswer && !wrongAnswers.includes(ans)
+            );
+            wrongAnswers.push(...additionalAnswers.slice(0, 3 - wrongAnswers.length));
+        }
+        
         // 合并正确和错误答案
-        const allOptions = [correctAnswer, ...wrongAnswers];
+        const allOptions = [correctAnswer, ...wrongAnswers.slice(0, 3)];
         
         // 随机打乱选项顺序
         this.challengeCurrentOptions = this.shuffleArray(allOptions);
@@ -699,13 +787,23 @@ class QuizApp {
         // 显示选项
         const optionButtons = document.querySelectorAll('#challenge-option-a, #challenge-option-b, #challenge-option-c, #challenge-option-d');
         optionButtons.forEach((btn, index) => {
-            btn.textContent = this.challengeCurrentOptions[index];
-            btn.className = 'option-btn'; // 重置样式
-            btn.disabled = false;
+            if (this.challengeCurrentOptions[index]) {
+                btn.textContent = this.challengeCurrentOptions[index];
+                btn.className = 'option-btn'; // 重置样式
+                btn.disabled = false;
+                btn.style.display = 'flex'; // 确保按钮可见
+            } else {
+                btn.style.display = 'none'; // 隐藏没有内容的按钮
+            }
         });
         
         // 隐藏结果
-        document.getElementById('challenge-result').style.display = 'none';
+        const resultElement = document.getElementById('challenge-result');
+        if (resultElement) {
+            resultElement.textContent = '';
+            resultElement.style.display = 'none';
+            resultElement.className = 'quiz-result';
+        }
     }
     
     // 处理挑战模式选项选择
@@ -736,10 +834,12 @@ class QuizApp {
             }
         });
         
-        // 0.3秒后自动进入下一题
-        setTimeout(() => {
-            this.nextChallengeQuestion();
-        }, 300);
+        // 根据设置的时间自动进入下一题
+        if (this.autoSwitchTime > 0) {
+            this.autoNextTimer = setTimeout(() => {
+                this.nextChallengeQuestion();
+            }, this.autoSwitchTime * 1000);
+        }
     }
     
     // 显示挑战模式结果

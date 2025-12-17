@@ -644,6 +644,44 @@ footer {
     width: 100%;
 }
 
+.challenge-settings {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+    padding: 15px 25px;
+    background: #f8f9fa;
+    border-radius: 12px;
+    border: 2px solid #e67e22;
+}
+
+.challenge-settings label {
+    font-size: 18px;
+    color: #2c3e50;
+    font-weight: bold;
+}
+
+#auto-switch-time {
+    padding: 8px 15px;
+    font-size: 16px;
+    border: 2px solid #bdc3c7;
+    border-radius: 8px;
+    background: white;
+    color: #2c3e50;
+    cursor: pointer;
+    min-width: 120px;
+}
+
+#auto-switch-time:hover {
+    border-color: #e67e22;
+}
+
+#auto-switch-time:focus {
+    outline: none;
+    border-color: #e67e22;
+    box-shadow: 0 0 0 3px rgba(230, 126, 34, 0.1);
+}
+
 .challenge-timer, .challenge-score {
     font-size: 24px;
     font-weight: bold;
@@ -788,6 +826,24 @@ footer {
     background: #8e44ad;
     transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(155, 89, 182, 0.3);
+}
+
+/* 响应式设计 - 挑战模式设置 */
+@media (max-width: 768px) {
+    .challenge-settings {
+        flex-direction: column;
+        text-align: center;
+        gap: 10px;
+    }
+    
+    .challenge-settings label {
+        margin-bottom: 5px;
+    }
+    
+    #auto-switch-time {
+        width: 100%;
+        max-width: 200px;
+    }
 }
 
 /* 挑战模式响应式设计 */
