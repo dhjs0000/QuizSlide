@@ -175,7 +175,12 @@ class QuizMode {
             btn.classList.remove('active');
         });
         
-        document.getElementById(this.currentMode).classList.add('active');
+        const activeButton = document.getElementById(this.currentMode);
+        if (activeButton) {
+            activeButton.classList.add('active');
+        } else {
+            console.warn(`Mode button with ID "${this.currentMode}" not found`);
+        }
     }
 }
 
@@ -670,7 +675,23 @@ class QuizApp {
     
     // 处理挑战模式选择
     handleChallengeModeSelect(mode) {
-        this.challengeMode.currentChallengeMode = mode;
+        // 将挑战模式的mode转换为标准的mode格式
+        let standardMode;
+        switch (mode) {
+            case 'chinese-to-english':
+                standardMode = MODES.CHINESE_TO_ENGLISH;
+                break;
+            case 'english-to-chinese':
+                standardMode = MODES.ENGLISH_TO_CHINESE;
+                break;
+            case 'random':
+                standardMode = MODES.RANDOM;
+                break;
+            default:
+                standardMode = MODES.CHINESE_TO_ENGLISH;
+        }
+        
+        this.challengeMode.currentChallengeMode = standardMode;
         this.challengeMode.start();
         
         // 隐藏选择界面，显示答题界面
