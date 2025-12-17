@@ -13,8 +13,9 @@
             <div class="app-mode-selector">
                 <button id="lecture-mode" class="app-mode-btn active">讲台模式</button>
                 <button id="quiz-mode" class="app-mode-btn">答题模式</button>
+                <button id="challenge-mode" class="app-mode-btn">挑战模式</button>
             </div>
-            <div class="mode-selector">
+            <div class="mode-selector" id="regular-mode-selector">
                 <button id="chinese-to-english" class="mode-btn active">中文→英文</button>
                 <button id="english-to-chinese" class="mode-btn">英文→中文</button>
                 <button id="random-mode" class="mode-btn">随机模式</button>
@@ -23,7 +24,7 @@
         
         <main>
             <div class="question-area">
-                <div id="question" class="question-text">点击开始答题</div>
+                <div id="question" class="question-text">在下方选择题库后开始答题</div>
                 <div id="answer" class="answer-text hidden"></div>
             </div>
             
@@ -43,6 +44,69 @@
                 </div>
                 <div class="quiz-result" id="quiz-result"></div>
                 <button id="next-quiz-question" class="control-btn">下一题</button>
+            </div>
+            
+            <!-- 挑战模式控制 -->
+            <div class="challenge-controls" style="display: none;">
+                <div class="challenge-mode-selection">
+                    <h3>选择挑战模式</h3>
+                    <div class="challenge-mode-options">
+                        <button class="challenge-mode-btn" data-mode="chinese-to-english">中文→英文</button>
+                        <button class="challenge-mode-btn" data-mode="english-to-chinese">英文→中文</button>
+                        <button class="challenge-mode-btn" data-mode="random">随机模式</button>
+                    </div>
+                </div>
+                <div class="challenge-quiz-interface" style="display: none;">
+                    <div class="challenge-timer">
+                        <span>用时: <span id="challenge-time">00:00</span></span>
+                    </div>
+                    <div class="challenge-score">
+                        <span>得分: <span id="challenge-score">0</span></span>
+                    </div>
+                    <div class="options-container">
+                        <button class="option-btn" id="challenge-option-a"></button>
+                        <button class="option-btn" id="challenge-option-b"></button>
+                        <button class="option-btn" id="challenge-option-c"></button>
+                        <button class="option-btn" id="challenge-option-d"></button>
+                    </div>
+                    <div class="quiz-result" id="challenge-result"></div>
+                    <button id="next-challenge-question" class="control-btn">下一题</button>
+                </div>
+            </div>
+            
+            <!-- 挑战模式结果 -->
+            <div class="challenge-results" style="display: none;">
+                <h2>挑战完成！</h2>
+                <div class="results-summary">
+                    <div class="result-item">
+                        <span>总用时:</span>
+                        <span id="total-time">00:00</span>
+                    </div>
+                    <div class="result-item">
+                        <span>总得分:</span>
+                        <span id="final-score">0</span>
+                    </div>
+                    <div class="result-item">
+                        <span>正确率:</span>
+                        <span id="accuracy">0%</span>
+                    </div>
+                    <div class="result-item">
+                        <span>能力分:</span>
+                        <span id="ability-score">0</span>
+                    </div>
+                </div>
+                <div class="results-details">
+                    <h3>答题详情</h3>
+                    <div id="wrong-questions" class="wrong-questions">
+                        <h4>错题 (置顶显示)</h4>
+                        <div id="wrong-list"></div>
+                    </div>
+                    <div id="correct-questions" class="correct-questions">
+                        <h4>正确题目</h4>
+                        <div id="correct-list"></div>
+                    </div>
+                </div>
+                <button id="restart-challenge" class="control-btn">重新开始挑战</button>
             </div>
             
             <div class="stats">
