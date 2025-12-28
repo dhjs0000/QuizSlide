@@ -639,35 +639,58 @@ class QuizMode {
     
     // 根据模式显示题目
     getQuestionText(question) {
+        console.log(`[DEBUG] getQuestionText() called, currentMode: ${this.currentMode}, lastRandomQuestion: ${this.lastRandomQuestion}`);
+        console.log(`[DEBUG] Question data: chinese="${question.chinese}", english="${question.english}"`);
+        
         switch (this.currentMode) {
             case MODES.CHINESE_TO_ENGLISH:
+                console.log(`[DEBUG] Returning chinese text: "${question.chinese}"`);
                 return question.chinese;
             case MODES.ENGLISH_TO_CHINESE:
+                console.log(`[DEBUG] Returning english text: "${question.english}"`);
                 return question.english;
             case MODES.RANDOM:
-                // 记录随机选择，确保答案对应
-                this.lastRandomQuestion = Math.random() < 0.5 ? 'chinese' : 'english';
-                return this.lastRandomQuestion === 'chinese' ? question.chinese : question.english;
+                // 只有在lastRandomQuestion还没有设置的情况下才进行随机选择
+                // 这确保同一个题目在多次调用中保持一致
+                if (this.lastRandomQuestion === null) {
+                    this.lastRandomQuestion = Math.random() < 0.5 ? 'chinese' : 'english';
+                    console.log(`[DEBUG] RANDOM mode: FIRST TIME - set lastRandomQuestion = "${this.lastRandomQuestion}"`);
+                } else {
+                    console.log(`[DEBUG] RANDOM mode: USING EXISTING lastRandomQuestion = "${this.lastRandomQuestion}"`);
+                }
+                const result = this.lastRandomQuestion === 'chinese' ? question.chinese : question.english;
+                console.log(`[DEBUG] RANDOM mode: returning "${result}"`);
+                return result;
             default:
+                console.log(`[DEBUG] Default: returning chinese text: "${question.chinese}"`);
                 return question.chinese;
         }
     }
     
     // 根据模式显示答案
     getAnswerText(question) {
+        console.log(`[DEBUG] getAnswerText() called, currentMode: ${this.currentMode}, lastRandomQuestion: ${this.lastRandomQuestion}`);
+        console.log(`[DEBUG] Question data: chinese="${question.chinese}", english="${question.english}"`);
+        
         switch (this.currentMode) {
             case MODES.CHINESE_TO_ENGLISH:
+                console.log(`[DEBUG] Returning english text: "${question.english}"`);
                 return question.english;
             case MODES.ENGLISH_TO_CHINESE:
+                console.log(`[DEBUG] Returning chinese text: "${question.chinese}"`);
                 return question.chinese;
             case MODES.RANDOM:
                 // 使用记录的随机选择，确保答案与题目对应
+                console.log(`[DEBUG] RANDOM mode: lastRandomQuestion = "${this.lastRandomQuestion}"`);
                 if (this.lastRandomQuestion === 'chinese') {
+                    console.log(`[DEBUG] RANDOM mode: returning english answer "${question.english}"`);
                     return question.english;
                 } else {
+                    console.log(`[DEBUG] RANDOM mode: returning chinese answer "${question.chinese}"`);
                     return question.chinese;
                 }
             default:
+                console.log(`[DEBUG] Default: returning english text: "${question.english}"`);
                 return question.english;
         }
     }
@@ -684,6 +707,27 @@ class QuizMode {
         } else {
             console.warn(`Mode button with ID "${this.currentMode}" not found`);
         }
+    }
+    
+    // 判断文本语言类型
+    getTextLanguage(text) {
+        if (speechSynthesis.containsChinese(text)) {
+            return 'chinese';
+        } else if (speechSynthesis.containsEnglish(text)) {
+            return 'english';
+        }
+        return 'unknown';
+    }
+    
+    // 获取当前题目显示的语言类型
+    getCurrentQuestionLanguage(question) {
+        console.log('[DEBUG] ===== getCurrentQuestionLanguage() START =====');
+        const questionText = this.getQuestionText(question);
+        console.log(`[DEBUG] getCurrentQuestionLanguage - questionText: "${questionText}"`);
+        const result = this.getTextLanguage(questionText);
+        console.log(`[DEBUG] getCurrentQuestionLanguage - detected language: "${result}"`);
+        console.log('[DEBUG] ===== getCurrentQuestionLanguage() END =====');
+        return result;
     }
 }
 
@@ -1284,6 +1328,7 @@ class QuizApp {
         
         if (hasNextQuestion && this.currentQuestion) {
             // 立即显示下一题，不延迟
+            // 确保随机模式的题目和答案选择一致
             this.displayChallengeQuestion();
         } else {
             // 挑战结束，显示结果
@@ -1318,9 +1363,20 @@ class QuizApp {
     
     // 显示挑战模式题目
     displayChallengeQuestion() {
-        if (!this.currentQuestion) return;
+        console.log('[DEBUG] ===== displayChallengeQuestion() START =====');
+        if (!this.currentQuestion) {
+            console.log('[DEBUG] No current question, returning');
+            return;
+        }
+        
+        console.log(`[DEBUG] Challenge mode display, currentMode: ${this.quizMode.currentMode}`);
+        console.log(`[DEBUG] lastRandomQuestion before getQuestionText: ${this.quizMode.lastRandomQuestion}`);
+        
+        // 注意：不要在挑战模式下重复设置随机选择，这已经在displayQuestion()中设置过了
+        // 重复设置会导致题目和答案不一致
         
         const questionText = this.quizMode.getQuestionText(this.currentQuestion);
+        console.log(`[DEBUG] Question text from getQuestionText: "${questionText}"`);
         document.getElementById('question').textContent = questionText;
         
         // 显示拼音或音标
@@ -1338,27 +1394,35 @@ class QuizApp {
                 this.speakCurrentWord();
             }, 800); // 延迟800ms后自动发音题目
         }
+        
+        console.log('[DEBUG] ===== displayChallengeQuestion() END =====');
     }
     
     // 生成挑战模式选项
     generateChallengeOptions() {
         if (!this.currentQuestion) return;
         
+        // 获取正确答案（此时lastRandomQuestion已经确定，不会变化）
         const correctAnswer = this.quizMode.getAnswerText(this.currentQuestion);
         const wrongAnswers = this.generateWrongAnswers(correctAnswer);
         
         // 确保有足够多的错误答案
         if (wrongAnswers.length < 3) {
             // 如果题库中的错误答案不够，生成一些默认的错误答案
-            const defaultWrongAnswers = ['暂无', '暂无', '暂无', '暂无', '未知答案'];
+            const currentLanguage = this.quizMode.getCurrentQuestionLanguage(this.currentQuestion);
+            const targetLanguage = currentLanguage === 'chinese' ? 'english' : 'chinese';
+            const defaultWrongAnswers = targetLanguage === 'chinese'
+                ? ['未知答案', '暂无', '错误选项', '其他', '不适用']
+                : ['Unknown answer', 'Not available', 'Wrong option', 'Other', 'Not applicable'];
             const additionalAnswers = defaultWrongAnswers.filter(ans =>
                 ans !== correctAnswer && !wrongAnswers.includes(ans)
             );
             wrongAnswers.push(...additionalAnswers.slice(0, 3 - wrongAnswers.length));
         }
         
-        // 合并正确和错误答案
-        const allOptions = [correctAnswer, ...wrongAnswers.slice(0, 3)];
+        // 确保有3个错误答案，合并正确和错误答案
+        const finalWrongAnswers = wrongAnswers.length >= 3 ? wrongAnswers.slice(0, 3) : wrongAnswers;
+        const allOptions = [correctAnswer, ...finalWrongAnswers];
         
         // 随机打乱选项顺序
         this.challengeCurrentOptions = this.shuffleArray(allOptions);
@@ -1588,10 +1652,8 @@ class QuizApp {
         if (question) {
             this.currentQuestion = question;
             this.isAnswerShown = false;
-            // 重置随机模式的选择状态
-            if (this.quizMode.currentMode === MODES.RANDOM) {
-                this.quizMode.lastRandomQuestion = null;
-            }
+            // 重置随机模式的选择状态，为新题目做准备
+            this.quizMode.lastRandomQuestion = null;
             this.displayQuestion();
             this.hideAnswer();
             return true; // 表示成功获取下一题
@@ -1603,6 +1665,9 @@ class QuizApp {
     
     // 显示答题模式题目
     displayQuizQuestion() {
+        // 注意：不要在答题模式下重复设置随机选择，这已经在displayQuestion()中设置过了
+        // 重复设置会导致题目和答案不一致
+        
         const questionText = this.quizMode.getQuestionText(this.currentQuestion);
         document.getElementById('question').textContent = questionText;
         
@@ -1622,21 +1687,45 @@ class QuizApp {
     
     // 显示题目拼音或音标
     displayQuestionPhonetic() {
-        if (!this.currentQuestion) return;
+        console.log('[DEBUG] ===== displayQuestionPhonetic() START =====');
+        if (!this.currentQuestion) {
+            console.log('[DEBUG] No current question in displayQuestionPhonetic');
+            return;
+        }
         
         const questionText = this.quizMode.getQuestionText(this.currentQuestion);
+        console.log(`[DEBUG] displayQuestionPhonetic - questionText: "${questionText}"`);
+        
         const questionPhoneticElement = document.getElementById('question-phonetic');
         
-        // 根据文本内容判断是中文还是英文
-        if (speechSynthesis.containsEnglish(questionText)) {
+        // 清空之前的内容
+        questionPhoneticElement.textContent = '';
+        
+        // 根据当前题目显示的语言类型来决定显示拼音还是音标
+        // 使用与getQuestionText()相同的逻辑来判断语言类型
+        const currentLanguage = this.quizMode.getCurrentQuestionLanguage(this.currentQuestion);
+        console.log(`[DEBUG] displayQuestionPhonetic - currentLanguage: "${currentLanguage}"`);
+        
+        if (currentLanguage === 'english') {
             // 英文显示音标
             const ipa = phoneticConverter.getIPA(questionText);
-            questionPhoneticElement.textContent = ipa ? `[${ipa}]` : '';
-        } else {
+            console.log(`[DEBUG] English mode - IPA result: "${ipa}"`);
+            if (ipa) {
+                questionPhoneticElement.textContent = `[${ipa}]`;
+                console.log(`[DEBUG] Set phonetic text to: [${ipa}]`);
+            }
+        } else if (currentLanguage === 'chinese') {
             // 中文显示拼音
             const pinyin = phoneticConverter.getPinyin(questionText);
-            questionPhoneticElement.textContent = pinyin;
+            console.log(`[DEBUG] Chinese mode - Pinyin result: "${pinyin}"`);
+            if (pinyin) {
+                questionPhoneticElement.textContent = pinyin;
+                console.log(`[DEBUG] Set phonetic text to: ${pinyin}`);
+            }
         }
+        
+        console.log(`[DEBUG] Final phonetic element text: "${questionPhoneticElement.textContent}"`);
+        console.log('[DEBUG] ===== displayQuestionPhonetic() END =====');
     }
     
     // 显示答案拼音或音标
@@ -1665,8 +1754,11 @@ class QuizApp {
         const correctAnswer = this.quizMode.getAnswerText(this.currentQuestion);
         const wrongAnswers = this.generateWrongAnswers(correctAnswer);
         
+        // 确保有3个错误答案
+        const finalWrongAnswers = wrongAnswers.length >= 3 ? wrongAnswers.slice(0, 3) : wrongAnswers;
+        
         // 合并正确和错误答案
-        const allOptions = [correctAnswer, ...wrongAnswers];
+        const allOptions = [correctAnswer, ...finalWrongAnswers];
         
         // 随机打乱选项顺序
         this.currentQuizOptions = this.shuffleArray(allOptions);
@@ -1685,16 +1777,42 @@ class QuizApp {
     
     // 生成错误答案
     generateWrongAnswers(correctAnswer) {
-        const wrongAnswers = [];
         const allQuestions = this.questionBank.questions.concat(this.questionBank.answeredQuestions);
         
-        // 从题库中随机选择3个不同的错误答案
-        const availableAnswers = allQuestions
-            .map(q => this.quizMode.getAnswerText(q))
-            .filter(answer => answer !== correctAnswer);
+        // 获取当前题目显示的语言类型
+        const currentLanguage = this.quizMode.getCurrentQuestionLanguage(this.currentQuestion);
+        
+        // 从题库中选择与当前题目语言类型相反的错误答案
+        // 如果题目是中文，选项应该是英文；如果题目是英文，选项应该是中文
+        const targetLanguage = currentLanguage === 'chinese' ? 'english' : 'chinese';
+        
+        // 获取目标语言的所有答案（不包括正确答案）
+        const targetLanguageAnswers = allQuestions
+            .map(q => {
+                const answerText = this.quizMode.getAnswerText(q);
+                const answerLanguage = this.quizMode.getTextLanguage(answerText);
+                return { text: answerText, language: answerLanguage };
+            })
+            .filter(item => item.language === targetLanguage && item.text !== correctAnswer)
+            .map(item => item.text);
+        
+        // 去重
+        const uniqueAnswers = [...new Set(targetLanguageAnswers)];
         
         // 随机选择3个不同的错误答案
-        const shuffled = this.shuffleArray([...new Set(availableAnswers)]);
+        const shuffled = this.shuffleArray(uniqueAnswers);
+        
+        // 如果相反类型的错误答案不够，生成一些默认的错误答案
+        if (shuffled.length < 3) {
+            const defaultWrongAnswers = targetLanguage === 'chinese'
+                ? ['未知答案', '暂无', '错误选项', '其他', '不适用']
+                : ['Unknown answer', 'Not available', 'Wrong option', 'Other', 'Not applicable'];
+            const additionalAnswers = defaultWrongAnswers.filter(ans =>
+                ans !== correctAnswer && !shuffled.includes(ans)
+            );
+            shuffled.push(...additionalAnswers.slice(0, 3 - shuffled.length));
+        }
+        
         return shuffled.slice(0, 3);
     }
     
@@ -1775,6 +1893,10 @@ class QuizApp {
     // 显示题目（根据应用模式）
     displayQuestion() {
         if (this.currentAppMode === APP_MODES.LECTURE) {
+            // 对于随机模式，先确定题目类型
+            if (this.quizMode.currentMode === MODES.RANDOM) {
+                this.quizMode.lastRandomQuestion = Math.random() < 0.5 ? 'chinese' : 'english';
+            }
             const questionText = this.quizMode.getQuestionText(this.currentQuestion);
             document.getElementById('question').textContent = questionText;
         } else if (this.currentAppMode === APP_MODES.QUIZ) {
@@ -1788,6 +1910,8 @@ class QuizApp {
     // 显示答案
     showAnswer() {
         if (this.currentQuestion && !this.isAnswerShown) {
+            // 对于随机模式，确保答案与题目类型一致
+            // lastRandomQuestion应该在显示题目时已经确定
             const answerText = this.quizMode.getAnswerText(this.currentQuestion);
             const answerElement = document.getElementById('answer');
             
