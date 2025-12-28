@@ -20,6 +20,509 @@ const MODES = {
     RANDOM: 'random-mode'
 };
 
+// 语音合成模块
+class SpeechSynthesis {
+    constructor() {
+        this.synth = window.speechSynthesis;
+        this.voices = [];
+        this.currentVoice = null;
+        this.isSpeaking = false;
+        
+        this.initializeVoices();
+    }
+    
+    // 初始化语音列表
+    initializeVoices() {
+        if (this.synth) {
+            this.loadVoices();
+            // 监听语音列表变化（某些浏览器需要延迟加载）
+            this.synth.onvoiceschanged = () => {
+                this.loadVoices();
+            };
+        }
+    }
+    
+    // 加载可用的语音
+    loadVoices() {
+        this.voices = this.synth.getVoices();
+        // 优先选择英文语音
+        this.currentVoice = this.voices.find(voice=>
+            voice.lang.startsWith('en') && voice.name.toLowerCase().includes('female')
+        ) || this.voices.find(voice => voice.lang.startsWith('en')) || this.voices[0];
+    }
+    
+    // 检查文本是否包含中文
+    containsChinese(text) {
+        return /[\u4e00-\u9fff]/.test(text);
+    }
+    
+    // 检查文本是否包含英文
+    containsEnglish(text) {
+        return /[a-zA-Z]/.test(text);
+    }
+    
+    // 朗读文本
+    speak(text) {
+        if (!this.synth || !text) return;
+        
+        // 停止当前播放
+        this.stop();
+        
+        // 创建语音合成实例
+        const utterance = new SpeechSynthesisUtterance(text);
+        
+        // 设置语音属性
+        if (this.currentVoice) {
+            utterance.voice = this.currentVoice;
+        }
+        
+        // 根据文本内容判断语言
+        if (this.containsChinese(text)) {
+            utterance.lang = 'zh-CN'; // 中文
+        } else if (this.containsEnglish(text)) {
+            utterance.lang = 'en-US'; // 英文
+        } else {
+            utterance.lang = 'en-US'; // 默认英文
+        }
+        
+        utterance.rate = 0.8; // 语速稍慢，便于学习
+        utterance.pitch = 1.0;
+        utterance.volume = 1.0;
+        
+        // 监听状态
+        utterance.onstart = () => {
+            this.isSpeaking = true;
+        };
+        
+        utterance.onend = () => {
+            this.isSpeaking = false;
+        };
+        
+        utterance.onerror = () => {
+            this.isSpeaking = false;
+        };
+        
+        // 开始朗读
+        this.synth.speak(utterance);
+    }
+    
+    // 停止朗读
+    stop() {
+        if (this.synth) {
+            this.synth.cancel();
+            this.isSpeaking = false;
+        }
+    }
+    
+    // 获取可用的语音列表
+    getVoices() {
+        return this.voices;
+    }
+    
+    // 设置语音
+    setVoice(voice) {
+        this.currentVoice = voice;
+    }
+    
+    // 检查是否支持语音合成
+    isSupported() {
+        return 'speechSynthesis' in window;
+    }
+}
+
+// 创建全局语音合成实例
+const speechSynthesis = new SpeechSynthesis();
+
+// 拼音和音标转换模块
+class PhoneticConverter {
+    constructor() {
+        // 简单的英文音标映射表（常用的单词）
+        this.ipaDict = {
+            // 基础词汇
+            'hello': 'həˈloʊ',
+            'world': 'wɜrld',
+            'apple': 'ˈæpl',
+            'book': 'bʊk',
+            'cat': 'kæt',
+            'dog': 'dɔg',
+            'house': 'haʊs',
+            'water': 'ˈwɔtər',
+            'food': 'fud',
+            'good': 'gʊd',
+            'bad': 'bæd',
+            'big': 'bɪg',
+            'small': 'smɔl',
+            'happy': 'ˈhæpi',
+            'sad': 'sæd',
+            'love': 'lʌv',
+            'hate': 'heɪt',
+            'friend': 'frɛnd',
+            'family': 'ˈfæməli',
+            'school': 'skul',
+            'teacher': 'ˈtitʃər',
+            'student': 'ˈstudənt',
+            'learn': 'lɜrn',
+            'study': 'ˈstʌdi',
+            'read': 'rid',
+            'write': 'raɪt',
+            'speak': 'spik',
+            'listen': 'ˈlɪsən',
+            'understand': 'ˌʌndərˈstænd',
+            'know': 'noʊ',
+            'think': 'θɪŋk',
+            'remember': 'rɪˈmɛmbər',
+            'forget': 'fərˈgɛt',
+            'time': 'taɪm',
+            'day': 'deɪ',
+            'night': 'naɪt',
+            'morning': 'ˈmɔrnɪŋ',
+            'afternoon': 'ˌæftərˈnun',
+            'evening': 'ˈivnɪŋ',
+            'week': 'wik',
+            'month': 'mʌnθ',
+            'year': 'jɪr',
+            'today': 'təˈdeɪ',
+            'tomorrow': 'təˈmɔroʊ',
+            'yesterday': 'ˈjɛstərˌdeɪ',
+            'color': 'ˈkʌlər',
+            'red': 'rɛd',
+            'blue': 'blu',
+            'green': 'grin',
+            'yellow': 'ˈjɛloʊ',
+            'black': 'blæk',
+            'white': 'waɪt',
+            'number': 'ˈnʌmbər',
+            'one': 'wʌn',
+            'two': 'tu',
+            'three': 'θri',
+            'four': 'fɔr',
+            'five': 'faɪv',
+            'six': 'sɪks',
+            'seven': 'ˈsɛvən',
+            'eight': 'eɪt',
+            'nine': 'naɪn',
+            'ten': 'tɛn',
+            'country': 'ˈkʌntri',
+            'city': 'ˈsɪti',
+            'people': 'ˈpipəl',
+            'person': 'ˈpɜrsən',
+            'man': 'mæn',
+            'woman': 'ˈwʊmən',
+            'child': 'tʃaɪld',
+            'children': 'ˈtʃɪldrən',
+            'father': 'ˈfɑðər',
+            'mother': 'ˈmʌðər',
+            'brother': 'ˈbrʌðər',
+            'sister': 'ˈsɪstər',
+            'work': 'wɜrk',
+            'job': 'dʒɑb',
+            'money': 'ˈmʌni',
+            'buy': 'baɪ',
+            'sell': 'sɛl',
+            'pay': 'peɪ',
+            'price': 'praɪs',
+            'cheap': 'tʃip',
+            'expensive': 'ɪkˈspɛnsɪv',
+            'free': 'fri',
+            'help': 'hɛlp',
+            'need': 'nid',
+            'want': 'wɑnt',
+            'like': 'laɪk',
+            'love': 'lʌv',
+            'enjoy': 'ɪnˈdʒɔɪ',
+            'hate': 'heɪt',
+            'live': 'lɪv',
+            'life': 'laɪf',
+            'die': 'daɪ',
+            'death': 'dɛθ',
+            'health': 'hɛlθ',
+            'healthy': 'ˈhɛlθi',
+            'sick': 'sɪk',
+            'doctor': 'ˈdɑktər',
+            'hospital': 'ˈhɑspɪtl',
+            'medicine': 'ˈmɛdɪsɪn',
+            'food': 'fud',
+            'water': 'ˈwɔtər',
+            'eat': 'it',
+            'drink': 'drɪŋk',
+            'hungry': 'ˈhʌŋgri',
+            'thirsty': 'ˈθɜrsti',
+            'house': 'haʊs',
+            'home': 'hoʊm',
+            'room': 'rum',
+            'kitchen': 'ˈkɪtʃən',
+            'bedroom': 'ˈbɛdrum',
+            'bathroom': 'ˈbæθrum',
+            'table': 'ˈteɪbəl',
+            'chair': 'tʃɛr',
+            'bed': 'bɛd',
+            'door': 'dɔr',
+            'window': 'ˈwɪndoʊ',
+            'car': 'kɑr',
+            'bus': 'bʌs',
+            'train': 'treɪn',
+            'plane': 'pleɪn',
+            'ship': 'ʃɪp',
+            'walk': 'wɔk',
+            'run': 'rʌn',
+            'jump': 'dʒʌmp',
+            'swim': 'swɪm',
+            'drive': 'draɪv',
+            'fly': 'flaɪ',
+            'travel': 'ˈtrævəl',
+            'trip': 'trɪp',
+            'journey': 'ˈdʒɜrni',
+            'road': 'roʊd',
+            'street': 'strit',
+            'bridge': 'brɪdʒ',
+            'river': 'ˈrɪvər',
+            'mountain': 'ˈmaʊntən',
+            'hill': 'hɪl',
+            'forest': 'ˈfɔrəst',
+            'tree': 'tri',
+            'flower': 'ˈflaʊər',
+            'grass': 'græs',
+            'sun': 'sʌn',
+            'moon': 'mun',
+            'star': 'stɑr',
+            'sky': 'skaɪ',
+            'cloud': 'klaʊd',
+            'rain': 'reɪn',
+            'snow': 'snoʊ',
+            'wind': 'wɪnd',
+            'storm': 'stɔrm',
+            'weather': 'ˈwɛðər',
+            'hot': 'hɑt',
+            'cold': 'koʊld',
+            'warm': 'wɔrm',
+            'cool': 'kul',
+            'spring': 'sprɪŋ',
+            'summer': 'ˈsʌmər',
+            'autumn': 'ˈɔtəm',
+            'winter': 'ˈwɪntər',
+            'January': 'ˈdʒænjuˌɛri',
+            'February': 'ˈfɛbruˌɛri',
+            'March': 'mɑrtʃ',
+            'April': 'ˈeɪprəl',
+            'May': 'meɪ',
+            'June': 'dʒun',
+            'July': 'dʒuˈlaɪ',
+            'August': 'ˈɔgəst',
+            'September': 'sɛpˈtɛmbər',
+            'October': 'ɑkˈtoʊbər',
+            'November': 'noʊˈvɛmbər',
+            'December': 'dɪˈsɛmbər',
+            'Monday': 'ˈmʌndeɪ',
+            'Tuesday': 'ˈtuzdeɪ',
+            'Wednesday': 'ˈwɛnzdeɪ',
+            'Thursday': 'ˈθɜrzdeɪ',
+            'Friday': 'ˈfraɪdeɪ',
+            'Saturday': 'ˈsætərdeɪ',
+            'Sunday': 'ˈsʌndeɪ'
+        };
+    }
+    
+    // 获取中文拼音
+    getPinyin(chineseText) {
+        if (!chineseText || typeof chineseText !== 'string') return '';
+        
+        try {
+            // 使用pinyin-pro库
+            if (typeof pinyinPro !== 'undefined') {
+                return pinyinPro.pinyin(chineseText, { toneType: 'symbol' });
+            } else {
+                // 备用方案：简单的拼音转换
+                return this.simplePinyin(chineseText);
+            }
+        } catch (error) {
+            console.warn('拼音转换失败:', error);
+            return this.simplePinyin(chineseText);
+        }
+    }
+    
+    // 简单的拼音转换（备用方案）
+    simplePinyin(chineseText) {
+        // 简单的汉字到拼音映射（常用字）
+        const simpleDict = {
+            '你': 'nǐ', '好': 'hǎo', '世': 'shì', '界': 'jiè', '苹': 'píng', '果': 'guǒ',
+            '书': 'shū', '猫': 'māo', '狗': 'gǒu', '房': 'fáng', '子': 'zi', '水': 'shuǐ',
+            '食': 'shí', '物': 'wù', '好': 'hǎo', '坏': 'huài', '大': 'dà', '小': 'xiǎo',
+            '高': 'gāo', '兴': 'xìng', '悲': 'bēi', '伤': 'shāng', '爱': 'ài', '恨': 'hèn',
+            '朋': 'péng', '友': 'yǒu', '家': 'jiā', '人': 'rén', '学': 'xué', '校': 'xiào',
+            '老': 'lǎo', '师': 'shī', '学': 'xué', '生': 'shēng', '学': 'xué', '习': 'xí',
+            '读': 'dú', '写': 'xiě', '说': 'shuō', '听': 'tīng', '懂': 'dǒng', '知': 'zhī',
+            '道': 'dào', '思': 'sī', '考': 'kǎo', '记': 'jì', '得': 'dé', '忘': 'wàng',
+            '时': 'shí', '间': 'jiān', '白': 'bái', '天': 'tiān', '黑': 'hēi', '夜': 'yè',
+            '早': 'zǎo', '上': 'shàng', '下': 'xià', '午': 'wǔ', '晚': 'wǎn', '上': 'shàng',
+            '周': 'zhōu', '月': 'yuè', '年': 'nián', '今': 'jīn', '天': 'tiān', '明': 'míng',
+            '天': 'tiān', '昨': 'zuó', '天': 'tiān', '颜': 'yán', '色': 'sè', '红': 'hóng',
+            '蓝': 'lán', '绿': 'lǜ', '黄': 'huáng', '黑': 'hēi', '白': 'bái', '数': 'shù',
+            '字': 'zì', '一': 'yī', '二': 'èr', '三': 'sān', '四': 'sì', '五': 'wǔ',
+            '六': 'liù', '七': 'qī', '八': 'bā', '九': 'jiǔ', '十': 'shí', '国': 'guó',
+            '城': 'chéng', '市': 'shì', '人': 'rén', '民': 'mín', '个': 'gè', '人': 'rén',
+            '男': 'nán', '女': 'nǚ', '小': 'xiǎo', '孩': 'hái', '子': 'zi', '父': 'fù',
+            '母': 'mǔ', '兄': 'xiōng', '弟': 'dì', '姐': 'jiě', '妹': 'mèi', '工': 'gōng',
+            '作': 'zuò', '职': 'zhí', '业': 'yè', '钱': 'qián', '买': 'mǎi', '卖': 'mài',
+            '付': 'fù', '价': 'jià', '格': 'gé', '便': 'pián', '宜': 'yí', '贵': 'guì',
+            '免': 'miǎn', '费': 'fèi', '帮': 'bāng', '助': 'zhù', '需': 'xū', '要': 'yào',
+            '想': 'xiǎng', '喜': 'xǐ', '欢': 'huān', '享': 'xiǎng', '受': 'shòu', '讨': 'tǎo',
+            '厌': 'yàn', '居': 'jū', '住': 'zhù', '生': 'shēng', '活': 'huó', '死': 'sǐ',
+            '亡': 'wáng', '健': 'jiàn', '康': 'kāng', '医': 'yī', '生': 'shēng', '院': 'yuàn',
+            '药': 'yào', '品': 'pǐn', '吃': 'chī', '喝': 'hē', '饥': 'jī', '饿': 'è',
+            '渴': 'kě', '房': 'fáng', '屋': 'wū', '家': 'jiā', '庭': 'tíng', '房': 'fáng',
+            '厨': 'chú', '房': 'fáng', '卧': 'wò', '室': 'shì', '浴': 'yù', '室': 'shì',
+            '桌': 'zhuō', '子': 'zi', '椅': 'yǐ', '子': 'zi', '床': 'chuáng', '门': 'mén',
+            '窗': 'chuāng', '户': 'hu', '汽': 'qì', '车': 'chē', '公': 'gōng', '共': 'gòng',
+            '汽': 'qì', '车': 'chē', '火': 'huǒ', '车': 'chē', '飞': 'fēi', '机': 'jī',
+            '船': 'chuán', '只': 'zhī', '步': 'bù', '行': 'xíng', '跑': 'pǎo', '跳': 'tiào',
+            '游': 'yóu', '泳': 'yǒng', '驾': 'jià', '驶': 'shǐ', '飞': 'fēi', '行': 'xíng',
+            '旅': 'lǚ', '行': 'xíng', '旅': 'lǚ', '程': 'chéng', '旅': 'lǚ', '途': 'tú',
+            '道': 'dào', '路': 'lù', '街': 'jiē', '道': 'dào', '桥': 'qiáo', '梁': 'liáng',
+            '河': 'hé', '流': 'liú', '山': 'shān', '丘': 'qiū', '丘': 'qiū', '陵': 'líng',
+            '森': 'sēn', '林': 'lín', '树': 'shù', '木': 'mù', '花': 'huā', '朵': 'duǒ',
+            '草': 'cǎo', '原': 'yuán', '太': 'tài', '阳': 'yáng', '月': 'yuè', '亮': 'liàng',
+            '星': 'xīng', '星': 'xīng', '天': 'tiān', '空': 'kōng', '云': 'yún', '彩': 'cǎi',
+            '雨': 'yǔ', '水': 'shuǐ', '雪': 'xuě', '花': 'huā', '风': 'fēng', '风': 'fēng',
+            '暴': 'bào', '天': 'tiān', '气': 'qì', '炎': 'yán', '热': 'rè', '寒': 'hán',
+            '冷': 'lěng', '温': 'wēn', '暖': 'nuǎn', '凉': 'liáng', '爽': 'shuǎng', '春': 'chūn',
+            '夏': 'xià', '秋': 'qiū', '冬': 'dōng', '一': 'yī', '月': 'yuè', '二': 'èr',
+            '月': 'yuè', '三': 'sān', '月': 'yuè', '四': 'sì', '月': 'yuè', '五': 'wǔ',
+            '月': 'yuè', '六': 'liù', '月': 'yuè', '七': 'qī', '月': 'yuè', '八': 'bā',
+            '月': 'yuè', '九': 'jiǔ', '月': 'yuè', '十': 'shí', '月': 'yuè', '十': 'shí',
+            '一': 'yī', '月': 'yuè', '十': 'shí', '二': 'èr', '月': 'yuè', '星': 'xīng',
+            '期': 'qī', '一': 'yī', '星': 'xīng', '期': 'qī', '二': 'èr', '星': 'xīng',
+            '期': 'qī', '三': 'sān', '星': 'xīng', '期': 'qī', '四': 'sì', '星': 'xīng',
+            '期': 'qī', '五': 'wǔ', '星': 'xīng', '期': 'qī', '六': 'liù', '星': 'xīng',
+            '期': 'qī', '日': 'rì'
+        };
+        
+        // 将每个字符转换为拼音
+        let result = '';
+        for (let char of chineseText) {
+            if (simpleDict[char]) {
+                result += simpleDict[char] + ' ';
+            } else {
+                result += char + ' ';
+            }
+        }
+        return result.trim();
+    }
+    
+    // 获取英文音标
+    getIPA(englishText) {
+        if (!englishText || typeof englishText !== 'string') return '';
+        
+        const word = englishText.toLowerCase().trim();
+        
+        // 首先检查内置词典
+        if (this.ipaDict[word]) {
+            return this.ipaDict[word];
+        }
+        
+        // 尝试分解复合词
+        const words = word.split(/\s+/);
+        if (words.length > 1) {
+            const ipaParts = words.map(w => this.getIPA(w)).filter(ipa => ipa);
+            return ipaParts.join(' ');
+        }
+        
+        // 简单的音标生成规则（基于拼写规则）
+        return this.generateSimpleIPA(word);
+    }
+    
+    // 简单的音标生成规则
+    generateSimpleIPA(word) {
+        // 基于英语拼写规则的简单音标生成
+        let ipa = word;
+        
+        // 常见的拼写到音标转换规则
+        const rules = [
+            // 元音规则
+            { pattern: /ee/g, replacement: 'iː' },
+            { pattern: /ea/g, replacement: 'iː' },
+            { pattern: /oo/g, replacement: 'uː' },
+            { pattern: /oa/g, replacement: 'oʊ' },
+            { pattern: /ai/g, replacement: 'eɪ' },
+            { pattern: /ay/g, replacement: 'eɪ' },
+            { pattern: /ei/g, replacement: 'eɪ' },
+            { pattern: /ey/g, replacement: 'eɪ' },
+            { pattern: /ou/g, replacement: 'aʊ' },
+            { pattern: /ow/g, replacement: 'aʊ' },
+            { pattern: /oi/g, replacement: 'ɔɪ' },
+            { pattern: /oy/g, replacement: 'ɔɪ' },
+            { pattern: /au/g, replacement: 'ɔː' },
+            { pattern: /aw/g, replacement: 'ɔː' },
+            { pattern: /ar/g, replacement: 'ɑːr' },
+            { pattern: /or/g, replacement: 'ɔːr' },
+            { pattern: /er/g, replacement: 'ɜːr' },
+            { pattern: /ir/g, replacement: 'ɜːr' },
+            { pattern: /ur/g, replacement: 'ɜːr' },
+            
+            // 辅音规则
+            { pattern: /ch/g, replacement: 'tʃ' },
+            { pattern: /sh/g, replacement: 'ʃ' },
+            { pattern: /th/g, replacement: 'θ' },
+            { pattern: /ng/g, replacement: 'ŋ' },
+            { pattern: /ph/g, replacement: 'f' },
+            { pattern: /qu/g, replacement: 'kw' },
+            { pattern: /x/g, replacement: 'ks' },
+            
+            // 简单的元音
+            { pattern: /a/g, replacement: 'æ' },
+            { pattern: /e/g, replacement: 'e' },
+            { pattern: /i/g, replacement: 'ɪ' },
+            { pattern: /o/g, replacement: 'ɒ' },
+            { pattern: /u/g, replacement: 'ʌ' },
+            
+            // 简单的辅音
+            { pattern: /b/g, replacement: 'b' },
+            { pattern: /c/g, replacement: 'k' },
+            { pattern: /d/g, replacement: 'd' },
+            { pattern: /f/g, replacement: 'f' },
+            { pattern: /g/g, replacement: 'g' },
+            { pattern: /h/g, replacement: 'h' },
+            { pattern: /j/g, replacement: 'dʒ' },
+            { pattern: /k/g, replacement: 'k' },
+            { pattern: /l/g, replacement: 'l' },
+            { pattern: /m/g, replacement: 'm' },
+            { pattern: /n/g, replacement: 'n' },
+            { pattern: /p/g, replacement: 'p' },
+            { pattern: /q/g, replacement: 'k' },
+            { pattern: /r/g, replacement: 'r' },
+            { pattern: /s/g, replacement: 's' },
+            { pattern: /t/g, replacement: 't' },
+            { pattern: /v/g, replacement: 'v' },
+            { pattern: /w/g, replacement: 'w' },
+            { pattern: /y/g, replacement: 'j' },
+            { pattern: /z/g, replacement: 'z' }
+        ];
+        
+        // 应用转换规则
+        for (let rule of rules) {
+            ipa = ipa.replace(rule.pattern, rule.replacement);
+        }
+        
+        // 重音规则（简单的启发式）
+        if (ipa.length > 4) {
+            // 在第二个音节添加重音
+            const syllables = ipa.split(' ');
+            if (syllables.length >= 2) {
+                syllables[0] = 'ˈ' + syllables[0];
+                ipa = syllables.join(' ');
+            } else {
+                ipa = 'ˈ' + ipa;
+            }
+        } else {
+            ipa = 'ˈ' + ipa;
+        }
+        
+        return ipa;
+    }
+}
+
+// 创建全局拼音音标转换器实例
+const phoneticConverter = new PhoneticConverter();
+
 // CSV文件解析模块
 class CSVParser {
     // 解析CSV文件内容
@@ -317,6 +820,13 @@ class QuizApp {
         this.challengeCurrentOptions = []; // 挑战模式当前选项
         this.autoNextTimer = null; // 自动下一题定时器
         this.autoSwitchTime = 0.3; // 默认自动切换时间（秒）
+        this.speechSynthesis = speechSynthesis; // 语音合成实例
+        this.speechSettings = {
+            rate: 0.8,
+            pitch: 1.0,
+            volume: 1.0,
+            autoSpeak: false
+        };
         
         this.initializeEventListeners();
     }
@@ -370,6 +880,41 @@ class QuizApp {
         // 文件上传
         document.getElementById('csv-file').addEventListener('change', (e) => {
             this.handleFileUpload(e);
+        });
+        
+        // 发音按钮
+        document.getElementById('speak-btn').addEventListener('click', () => {
+            this.speakCurrentWord();
+        });
+        
+        // 语音设置按钮
+        document.getElementById('speech-settings-btn').addEventListener('click', () => {
+            this.toggleSpeechPanel();
+        });
+        
+        // 关闭语音设置面板
+        document.getElementById('close-speech-panel').addEventListener('click', () => {
+            this.hideSpeechPanel();
+        });
+        
+        // 语音设置滑块
+        document.getElementById('speech-rate').addEventListener('input', (e) => {
+            this.updateSpeechSetting('rate', parseFloat(e.target.value));
+            document.getElementById('speech-rate-value').textContent = e.target.value;
+        });
+        
+        document.getElementById('speech-pitch').addEventListener('input', (e) => {
+            this.updateSpeechSetting('pitch', parseFloat(e.target.value));
+            document.getElementById('speech-pitch-value').textContent = e.target.value;
+        });
+        
+        document.getElementById('speech-volume').addEventListener('input', (e) => {
+            this.updateSpeechSetting('volume', parseFloat(e.target.value));
+            document.getElementById('speech-volume-value').textContent = e.target.value;
+        });
+        
+        document.getElementById('auto-speak').addEventListener('change', (e) => {
+            this.updateSpeechSetting('autoSpeak', e.target.checked);
         });
         
         // 模式切换
@@ -778,8 +1323,21 @@ class QuizApp {
         const questionText = this.quizMode.getQuestionText(this.currentQuestion);
         document.getElementById('question').textContent = questionText;
         
+        // 显示拼音或音标
+        this.displayQuestionPhonetic();
+        
         // 确保选项生成完成后再显示
         this.generateChallengeOptions();
+        
+        // 更新发音按钮状态
+        this.updateSpeakButton();
+        
+        // 如果启用了自动发音，延迟一段时间后自动发音题目
+        if (this.speechSettings.autoSpeak && !this.speechSynthesis.isSpeaking) {
+            setTimeout(() => {
+                this.speakCurrentWord();
+            }, 800); // 延迟800ms后自动发音题目
+        }
     }
     
     // 生成挑战模式选项
@@ -876,6 +1434,14 @@ class QuizApp {
         }
         
         resultElement.style.display = 'block';
+        
+        // 如果启用了自动发音，发音正确答案
+        if (this.speechSettings.autoSpeak) {
+            setTimeout(() => {
+                const correctText = this.quizMode.getAnswerText(this.currentQuestion);
+                this.speakText(correctText);
+            }, 300); // 延迟300ms后发音正确答案
+        }
     }
     
     // 显示挑战模式最终结果
@@ -1039,7 +1605,57 @@ class QuizApp {
     displayQuizQuestion() {
         const questionText = this.quizMode.getQuestionText(this.currentQuestion);
         document.getElementById('question').textContent = questionText;
+        
+        // 显示拼音或音标
+        this.displayQuestionPhonetic();
+        
         this.generateQuizOptions();
+        this.updateSpeakButton();
+        
+        // 如果启用了自动发音，延迟一段时间后自动发音题目
+        if (this.speechSettings.autoSpeak && !this.speechSynthesis.isSpeaking) {
+            setTimeout(() => {
+                this.speakCurrentWord();
+            }, 800); // 延迟800ms后自动发音题目
+        }
+    }
+    
+    // 显示题目拼音或音标
+    displayQuestionPhonetic() {
+        if (!this.currentQuestion) return;
+        
+        const questionText = this.quizMode.getQuestionText(this.currentQuestion);
+        const questionPhoneticElement = document.getElementById('question-phonetic');
+        
+        // 根据文本内容判断是中文还是英文
+        if (speechSynthesis.containsEnglish(questionText)) {
+            // 英文显示音标
+            const ipa = phoneticConverter.getIPA(questionText);
+            questionPhoneticElement.textContent = ipa ? `[${ipa}]` : '';
+        } else {
+            // 中文显示拼音
+            const pinyin = phoneticConverter.getPinyin(questionText);
+            questionPhoneticElement.textContent = pinyin;
+        }
+    }
+    
+    // 显示答案拼音或音标
+    displayAnswerPhonetic() {
+        if (!this.currentQuestion) return;
+        
+        const answerText = this.quizMode.getAnswerText(this.currentQuestion);
+        const answerPhoneticElement = document.getElementById('answer-phonetic');
+        
+        // 根据文本内容判断是中文还是英文
+        if (speechSynthesis.containsEnglish(answerText)) {
+            // 英文显示音标
+            const ipa = phoneticConverter.getIPA(answerText);
+            answerPhoneticElement.textContent = ipa ? `[${ipa}]` : '';
+        } else {
+            // 中文显示拼音
+            const pinyin = phoneticConverter.getPinyin(answerText);
+            answerPhoneticElement.textContent = pinyin;
+        }
     }
     
     // 生成答题模式选项
@@ -1104,6 +1720,15 @@ class QuizApp {
         // 显示结果
         this.showQuizResult(isCorrect, correctAnswer);
         
+        // 如果启用了自动发音，发音正确答案
+        if (this.speechSettings.autoSpeak) {
+            setTimeout(() => {
+                // 发音正确答案
+                const correctText = this.quizMode.getAnswerText(this.currentQuestion);
+                this.speakText(correctText);
+            }, 300); // 延迟300ms后发音正确答案
+        }
+        
         // 禁用所有选项按钮
         document.querySelectorAll('.option-btn').forEach(btn => {
             btn.disabled = true;
@@ -1155,6 +1780,9 @@ class QuizApp {
         } else if (this.currentAppMode === APP_MODES.QUIZ) {
             this.displayQuizQuestion();
         }
+        
+        // 更新发音按钮状态
+        this.updateSpeakButton();
     }
     
     // 显示答案
@@ -1167,6 +1795,9 @@ class QuizApp {
             answerElement.classList.add('show');
             answerElement.classList.remove('hidden');
             
+            // 显示答案的拼音或音标
+            this.displayAnswerPhonetic();
+            
             this.isAnswerShown = true;
         }
     }
@@ -1174,9 +1805,14 @@ class QuizApp {
     // 隐藏答案
     hideAnswer() {
         const answerElement = document.getElementById('answer');
+        const answerPhoneticElement = document.getElementById('answer-phonetic');
+        
         answerElement.classList.remove('show');
         answerElement.classList.add('hidden');
         answerElement.textContent = '';
+        
+        // 同时隐藏答案的拼音或音标
+        answerPhoneticElement.textContent = '';
     }
     
     // 显示完成信息
@@ -1293,6 +1929,174 @@ class QuizApp {
         setTimeout(() => {
             messageElement.remove();
         }, 3000);
+    }
+    
+    // 发音指定文本
+    speakText(text) {
+        if (!text || !this.speechSynthesis.isSupported()) return;
+        
+        // 清理文本
+        const cleanText = this.cleanTextForSpeech(text);
+        if (!cleanText) return;
+        
+        // 判断语言
+        let targetLang = 'en-US';
+        if (this.containsChinese(cleanText)) {
+            targetLang = 'zh-CN';
+        } else if (this.containsEnglish(cleanText)) {
+            targetLang = 'en-US';
+        }
+        
+        // 创建语音合成实例
+        const utterance = new SpeechSynthesisUtterance(cleanText);
+        
+        // 设置语音属性
+        if (this.speechSynthesis.currentVoice) {
+            utterance.voice = this.speechSynthesis.currentVoice;
+        }
+        utterance.lang = targetLang;
+        utterance.rate = this.speechSettings.rate;
+        utterance.pitch = this.speechSettings.pitch;
+        utterance.volume = this.speechSettings.volume;
+        
+        // 停止当前播放并开始新的朗读
+        this.speechSynthesis.stop();
+        this.speechSynthesis.synth.speak(utterance);
+    }
+    
+    // 发音功能
+    speakCurrentWord() {
+        if (!this.currentQuestion) return;
+        
+        // 获取要发音的文本
+        let textToSpeak = '';
+        let targetLang = 'en-US';
+        
+        // 根据当前模式决定发音内容
+        if (this.currentAppMode === APP_MODES.LECTURE) {
+            // 讲台模式：如果显示了答案，则发音答案；否则发音题目
+            if (this.isAnswerShown) {
+                textToSpeak = this.quizMode.getAnswerText(this.currentQuestion);
+            } else {
+                // 发音当前显示的文本
+                textToSpeak = this.quizMode.getQuestionText(this.currentQuestion);
+            }
+        } else if (this.currentAppMode === APP_MODES.QUIZ) {
+            // 答题模式：发音题目
+            textToSpeak = this.quizMode.getQuestionText(this.currentQuestion);
+        } else if (this.currentAppMode === APP_MODES.CHALLENGE) {
+            // 挑战模式：发音题目
+            textToSpeak = this.quizMode.getQuestionText(this.currentQuestion);
+        }
+        
+        // 根据文本内容判断语言
+        if (this.containsChinese(textToSpeak)) {
+            targetLang = 'zh-CN';
+        } else if (this.containsEnglish(textToSpeak)) {
+            targetLang = 'en-US';
+        }
+        
+        // 清理文本（移除特殊字符）
+        textToSpeak = this.cleanTextForSpeech(textToSpeak);
+        
+        if (textToSpeak && this.speechSynthesis.isSupported()) {
+            // 更新按钮状态
+            const speakBtn = document.getElementById('speak-btn');
+            speakBtn.classList.add('speaking');
+            
+            // 使用自定义设置创建语音合成实例
+            const utterance = new SpeechSynthesisUtterance(textToSpeak);
+            
+            // 设置语音属性
+            if (this.speechSynthesis.currentVoice) {
+                utterance.voice = this.speechSynthesis.currentVoice;
+            }
+            utterance.lang = targetLang;
+            utterance.rate = this.speechSettings.rate;
+            utterance.pitch = this.speechSettings.pitch;
+            utterance.volume = this.speechSettings.volume;
+            
+            // 监听状态
+            utterance.onstart = () => {
+                this.speechSynthesis.isSpeaking = true;
+            };
+            
+            utterance.onend = () => {
+                this.speechSynthesis.isSpeaking = false;
+                speakBtn.classList.remove('speaking');
+            };
+            
+            utterance.onerror = () => {
+                this.speechSynthesis.isSpeaking = false;
+                speakBtn.classList.remove('speaking');
+            };
+            
+            // 停止当前播放并开始新的朗读
+            this.speechSynthesis.stop();
+            this.speechSynthesis.synth.speak(utterance);
+            
+        } else if (!this.speechSynthesis.isSupported()) {
+            this.showMessage('您的浏览器不支持语音合成功能', 'warning');
+        }
+    }
+    
+    // 检查文本是否包含英文
+    containsEnglish(text) {
+        return /[a-zA-Z]/.test(text);
+    }
+    
+    // 检查文本是否包含中文
+    containsChinese(text) {
+        return /[\u4e00-\u9fff]/.test(text);
+    }
+    
+    // 清理文本以便发音
+    cleanTextForSpeech(text) {
+        if (!text) return '';
+        
+        // 移除HTML标签
+        text = text.replace(/<[^>]*>/g, '');
+        
+        // 移除特殊字符，但保留字母、数字、空格和基本标点
+        text = text.replace(/[^\w\s.,!?()-]/g, '');
+        
+        // 移除多余的空格
+        text = text.trim().replace(/\s+/g, ' ');
+        
+        return text;
+    }
+    
+    // 更新发音按钮显示
+    updateSpeakButton() {
+        const speakBtn = document.getElementById('speak-btn');
+        if (!speakBtn) return;
+        
+        // 检查是否有当前题目
+        if (this.currentQuestion && this.speechSynthesis.isSupported()) {
+            speakBtn.style.display = 'inline-flex';
+        } else {
+            speakBtn.style.display = 'none';
+        }
+    }
+    
+    // 语音设置相关方法
+    toggleSpeechPanel() {
+        const panel = document.getElementById('speech-panel');
+        panel.classList.toggle('hidden');
+    }
+    
+    hideSpeechPanel() {
+        const panel = document.getElementById('speech-panel');
+        panel.classList.add('hidden');
+    }
+    
+    updateSpeechSetting(setting, value) {
+        this.speechSettings[setting] = value;
+        
+        // 更新语音合成实例的设置
+        if (setting === 'rate' || setting === 'pitch' || setting === 'volume') {
+            // 这些设置将在下次发音时应用
+        }
     }
 }
 
