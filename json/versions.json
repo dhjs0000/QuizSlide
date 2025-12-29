@@ -1,6 +1,15 @@
 {
   "versions": [
     {
+      "version": "1.2.0-Snapshot2",
+      "type": "预览版",
+      "date": "2026-01-15",
+      "prerelease": true,
+      "features": [
+        "fix: 修复长城背景路径问题"
+      ]
+    },
+    {
       "version": "1.2.0-Snapshot1",
       "type": "预览版",
       "date": "2025-12-29",
