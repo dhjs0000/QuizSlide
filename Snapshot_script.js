@@ -943,12 +943,14 @@ class QuizApp {
         }
     }
     
-    // 更新主界面透明度
+    // 更新主界面透明度（只调节背景颜色透明度）
     updateContainerTransparency(opacity) {
         const container = document.querySelector('.container');
         if (container) {
-            container.style.opacity = opacity;
-            container.style.transition = 'opacity 0.3s ease';
+            // 获取原始背景颜色（白色）并转换为RGBA格式
+            const baseColor = '255, 255, 255'; // 白色的RGB值
+            container.style.backgroundColor = `rgba(${baseColor}, ${opacity})`;
+            container.style.transition = 'background-color 0.3s ease';
         }
     }
     

@@ -1,6 +1,16 @@
 {
   "versions": [
     {
+      "version": "1.2.0-Snapshot1",
+      "type": "预览版",
+      "date": "2025-12-29",
+      "prerelease": true,
+      "features": [
+        "feat: 修改透明度只会影响背景颜色透明度，不再影响所有子元素透明度",
+        "feat: 加入了更多预设背景图片选项"
+      ]
+    },
+    {
       "version": "1.1.0",
       "type": "正式版",
       "date": "2025-12-29",
