@@ -879,17 +879,46 @@ class QuizApp {
     // 初始化背景设置
     initializeBackgroundSettings() {
         const backgroundSelector = document.getElementById('background-selector');
+        const transparencySlider = document.getElementById('container-transparency');
+        const transparencyValue = document.getElementById('transparency-value');
+        
         if (backgroundSelector) {
             backgroundSelector.addEventListener('change', (e) => {
                 this.changeBackground(e.target.value);
             });
-            
-            // 加载保存的背景设置
-            const savedBackground = localStorage.getItem('quizBackground');
-            if (savedBackground) {
-                backgroundSelector.value = savedBackground;
-                this.changeBackground(savedBackground);
-            }
+        }
+        
+        if (transparencySlider && transparencyValue) {
+            transparencySlider.addEventListener('input', (e) => {
+                const value = parseFloat(e.target.value);
+                const percentage = Math.round(value * 100);
+                transparencyValue.textContent = `${percentage}%`;
+                this.updateContainerTransparency(value);
+                
+                // 保存透明度设置
+                localStorage.setItem('quizContainerTransparency', value);
+            });
+        }
+        
+        // 加载保存的背景设置
+        const savedBackground = localStorage.getItem('quizBackground');
+        const savedTransparency = localStorage.getItem('quizContainerTransparency');
+        
+        if (savedBackground) {
+            backgroundSelector.value = savedBackground;
+            this.changeBackground(savedBackground);
+        }
+        
+        if (savedTransparency) {
+            const transparency = parseFloat(savedTransparency);
+            transparencySlider.value = transparency;
+            transparencyValue.textContent = `${Math.round(transparency * 100)}%`;
+            this.updateContainerTransparency(transparency);
+        } else {
+            // 默认透明度为100%
+            transparencySlider.value = 1.0;
+            transparencyValue.textContent = '100%';
+            this.updateContainerTransparency(1.0);
         }
     }
     
@@ -911,6 +940,15 @@ class QuizApp {
             
             // 从本地存储移除设置
             localStorage.removeItem('quizBackground');
+        }
+    }
+    
+    // 更新主界面透明度
+    updateContainerTransparency(opacity) {
+        const container = document.querySelector('.container');
+        if (container) {
+            container.style.opacity = opacity;
+            container.style.transition = 'opacity 0.3s ease';
         }
     }
     
