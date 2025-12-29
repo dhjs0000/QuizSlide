@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>版本说明 - 单词答题游戏</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* 版本页面专用样式 */
+        .version-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        
+        .version-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .version-header h1 {
+            font-size: 36px;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .version-header p {
+            font-size: 18px;
+            color: #7f8c8d;
+        }
+        
+        .version-list {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .version-item {
+            border-bottom: 1px solid #ecf0f1;
+            padding: 25px 0;
+            position: relative;
+        }
+        
+        .version-item:last-child {
+            border-bottom: none;
+        }
+        
+        .version-header-info {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .version-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #3498db;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .version-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .version-badge.release {
+            background: #28a745;
+            color: white;
+        }
+        
+        .version-badge.prerelease {
+            background: #ffc107;
+            color: #212529;
+        }
+        
+        .version-date {
+            font-size: 14px;
+            color: #95a5a6;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .version-features {
+            list-style: none;
+            padding-left: 0;
+            margin-top: 15px;
+        }
+        
+        .version-features li {
+            font-size: 16px;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            padding-left: 25px;
+            position: relative;
+            line-height: 1.5;
+        }
+        
+        .version-features li:before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: #3498db;
+            font-weight: bold;
+            font-size: 20px;
+        }
+        
+        
+        .back-button {
+            display: inline-block;
+            padding: 12px 30px;
+            background: #3498db;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+        
+        .back-button:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+        }
+        
+        .button-container {
+            text-align: center;
+            margin-top: 30px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #7f8c8d;
+        }
+        
+        .error {
+            text-align: center;
+            padding: 40px;
+            color: #e74c3c;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .version-header h1 {
+                font-size: 28px;
+            }
+            
+            .version-list {
+                padding: 20px;
+            }
+            
+            .version-number {
+                font-size: 20px;
+            }
+            
+            .version-header-info {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+            
+            
+            .version-features li {
+                font-size: 14px;
+            }
+        }
+        
+        @media (min-width: 1920px) {
+            .version-header h1 {
+                font-size: 42px;
+            }
+            
+            .version-header p {
+                font-size: 20px;
+            }
+            
+            .version-number {
+                font-size: 28px;
+            }
+            
+            .version-features li {
+                font-size: 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="version-container">
+            <div class="version-header">
+                <h1>版本说明</h1>
+                <p>单词答题游戏 - 更新历史记录</p>
+            </div>
+            
+            <div id="version-list" class="version-list">
+                <div class="loading">正在加载版本信息...</div>
+            </div>
+            
+            <div class="button-container">
+                <a href="index.html" class="back-button">返回游戏</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 版本数据（备用方案，当无法加载JSON文件时使用）
+        const versionData = {
+            "versions": [
+                {
+                    "version": "1.2.0-beta.1",
+                    "type": "预览版",
+                    "date": "2025-12-30",
+                    "prerelease": true,
+                    "features": [
+                        "新增多人在线对战模式（测试版）",
+                        "优化语音朗读引擎",
+                        "添加学习进度统计图表",
+                        "修复已知问题"
+                    ]
+                },
+                {
+                    "version": "1.1.0",
+                    "type": "正式版",
+                    "date": "2025-12-29",
+                    "prerelease": false,
+                    "features": [
+                        "添加了背景功能 - 支持自定义背景图片和界面透明度调节",
+                        "优化了用户界面体验",
+                        "增加了版本说明页面"
+                    ]
+                },
+                {
+                    "version": "1.0.0",
+                    "type": "正式版",
+                    "date": "2025-12-01",
+                    "prerelease": false,
+                    "features": [
+                        "初始版本发布",
+                        "支持三种游戏模式：讲台模式、答题模式、挑战模式",
+                        "支持中英文互转学习",
+                        "内置多个英语词库",
+                        "支持语音朗读功能",
+                        "支持自定义题库文件上传"
+                    ]
+                }
+            ]
+        };
+
+        // 从JSON文件加载版本信息
+        async function loadVersions() {
+            try {
+                const response = await fetch('json/versions.json');
+                if (!response.ok) {
+                    throw new Error('无法加载版本信息');
+                }
+                
+                const data = await response.json();
+                displayVersions(data.versions);
+            } catch (error) {
+                console.warn('无法加载外部JSON文件，使用内置数据:', error.message);
+                // 使用内置数据
+                displayVersions(versionData.versions);
+            }
+        }
+        
+        function displayVersions(versions) {
+            const versionList = document.getElementById('version-list');
+            
+            if (!versions || versions.length === 0) {
+                versionList.innerHTML = '<div class="error">暂无版本信息</div>';
+                return;
+            }
+            
+            // 按版本号排序（最新的在前）
+            versions.sort((a, b) => {
+                const versionA = a.version.split('.').map(Number);
+                const versionB = b.version.split('.').map(Number);
+                
+                for (let i = 0; i < Math.max(versionA.length, versionB.length); i++) {
+                    const numA = versionA[i] || 0;
+                    const numB = versionB[i] || 0;
+                    
+                    if (numA !== numB) {
+                        return numB - numA;
+                    }
+                }
+                return 0;
+            });
+            
+            const versionsHTML = versions.map(version => {
+                const badgeClass = version.prerelease ? 'prerelease' : 'release';
+                const badgeText = version.prerelease ? '预览版' : '正式版';
+                
+                const featuresHTML = version.features.map(feature =>
+                    `<li>${feature}</li>`
+                ).join('');
+                
+                return `
+                    <div class="version-item">
+                        <div class="version-header-info">
+                            <div class="version-number">
+                                版本 ${version.version}
+                                <span class="version-badge ${badgeClass}">${badgeText}</span>
+                            </div>
+                            <div class="version-date">
+                                📅 ${formatDate(version.date)}
+                            </div>
+                        </div>
+                        <ul class="version-features">
+                            ${featuresHTML}
+                        </ul>
+                    </div>
+                `;
+            }).join('');
+            
+            versionList.innerHTML = versionsHTML;
+        }
+        
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const year = date.getFullYear();
+            const month = date.getMonth() + 1;
+            const day = date.getDate();
+            
+            return `${year}年${month}月${day}日`;
+        }
+        
+        function displayError(message) {
+            const versionList = document.getElementById('version-list');
+            versionList.innerHTML = `<div class="error">❌ ${message}</div>`;
+        }
+        
+        
+        // 页面加载时自动加载版本信息
+        document.addEventListener('DOMContentLoaded', loadVersions);
+    </script>
+</body>
+</html>
