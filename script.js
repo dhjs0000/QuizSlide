@@ -873,6 +873,45 @@ class QuizApp {
         };
         
         this.initializeEventListeners();
+        this.initializeBackgroundSettings();
+    }
+    
+    // 初始化背景设置
+    initializeBackgroundSettings() {
+        const backgroundSelector = document.getElementById('background-selector');
+        if (backgroundSelector) {
+            backgroundSelector.addEventListener('change', (e) => {
+                this.changeBackground(e.target.value);
+            });
+            
+            // 加载保存的背景设置
+            const savedBackground = localStorage.getItem('quizBackground');
+            if (savedBackground) {
+                backgroundSelector.value = savedBackground;
+                this.changeBackground(savedBackground);
+            }
+        }
+    }
+    
+    // 更改背景图片
+    changeBackground(imagePath) {
+        const body = document.body;
+        
+        if (imagePath && imagePath !== 'none') {
+            // 设置背景图片
+            body.style.backgroundImage = `url('${imagePath}')`;
+            body.classList.add('has-background');
+            
+            // 保存设置到本地存储
+            localStorage.setItem('quizBackground', imagePath);
+        } else {
+            // 移除背景图片
+            body.style.backgroundImage = '';
+            body.classList.remove('has-background');
+            
+            // 从本地存储移除设置
+            localStorage.removeItem('quizBackground');
+        }
     }
     
     // 初始化事件监听器

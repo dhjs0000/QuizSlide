@@ -53,17 +53,25 @@
 body {
     font-family: 'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
     background: #1aa152;
-    min-height: 100vh;  
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    min-height: 100vh;
     display: flex;
     justify-content: center;
     align-items: center;
     color: #333;
+    transition: background-image 0.5s ease;
+}
+
+body.has-background {
+    background-color: transparent;
 }
 
 /* 容器样式 */
 .container {
     background: white;
-    border-radius: 20px;
     box-shadow: 0 20px 40px rgba(0,0,0,0.1);
     padding: 40px;
     max-width: 1200px;
@@ -1057,5 +1065,131 @@ footer {
     
     .wrong-questions h4, .correct-questions h4 {
         font-size: 24px;
+    }
+}
+
+/* 版本信息样式 */
+.version-info {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #e0e0e0;
+    text-align: center;
+}
+
+/* 背景设置样式 */
+.background-settings {
+    margin-top: 20px;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 12px;
+    border: 2px solid #e9ecef;
+}
+
+.background-settings h4 {
+    text-align: center;
+    color: #2c3e50;
+    margin-bottom: 15px;
+    font-size: 20px;
+}
+
+.background-options {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.background-options label {
+    color: #7f8c8d;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+#background-selector {
+    padding: 10px 15px;
+    border: 2px solid #bdc3c7;
+    border-radius: 8px;
+    background: white;
+    font-size: 16px;
+    cursor: pointer;
+    min-width: 200px;
+    color: #2c3e50;
+}
+
+#background-selector:hover {
+    border-color: #3498db;
+}
+
+#background-selector:focus {
+    outline: none;
+    border-color: #3498db;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+/* 响应式设计 - 背景设置 */
+@media (max-width: 768px) {
+    .background-settings {
+        padding: 15px;
+    }
+    
+    .background-settings h4 {
+        font-size: 18px;
+    }
+    
+    .background-options {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    #background-selector {
+        width: 100%;
+        max-width: 250px;
+    }
+}
+
+@media (min-width: 1920px) {
+    .background-settings h4 {
+        font-size: 24px;
+    }
+    
+    .background-options label {
+        font-size: 18px;
+    }
+    
+    #background-selector {
+        font-size: 18px;
+        padding: 12px 18px;
+        min-width: 250px;
+    }
+}
+
+.version-text {
+    font-size: 14px;
+    color: #7f8c8d;
+    font-family: 'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
+}
+
+.version-text a {
+    color: #3498db;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.version-text a:hover {
+    color: #2980b9;
+    text-decoration: underline;
+}
+
+/* 响应式设计 - 版本信息 */
+@media (max-width: 768px) {
+    .version-text {
+        font-size: 12px;
+    }
+}
+
+@media (min-width: 1920px) {
+    .version-text {
+        font-size: 16px;
     }
 }
