@@ -200,18 +200,45 @@ header h1 {
 }
 
 /* 拼音和音标样式 */
+.phonetic-container {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    margin-top: 8px;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+}
+
+.phonetic-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(127, 140, 141, 0.1);
+    padding: 8px 15px;
+    border-radius: 20px;
+    border: 1px solid rgba(127, 140, 141, 0.2);
+}
+
+.phonetic-label {
+    font-size: 14px;
+    color: #7f8c8d;
+    font-weight: bold;
+    font-family: 'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
+}
+
 .phonetic-text {
     font-size: 18px;
     color: #7f8c8d;
     font-style: italic;
-    margin-top: 8px;
-    margin-bottom: 15px;
-    text-align: center;
     font-family: 'Arial', sans-serif;
     letter-spacing: 1px;
 }
 
 .phonetic-text:empty {
+    display: none;
+}
+
+.phonetic-container:empty {
     display: none;
 }
 
@@ -678,41 +705,233 @@ footer {
     margin: 20px 0;
 }
 
-/* 响应式设计 */
+/* 响应式设计 - 手机端优化 */
 @media (max-width: 768px) {
+    body {
+        background-size: cover;
+        background-position: center;
+        min-height: 100vh;
+        padding: 0;
+        margin: 0;
+    }
+    
     .container {
-        padding: 20px;
-        margin: 20px;
+        padding: 15px;
+        margin: 10px;
+        width: calc(100% - 20px);
+        min-height: calc(100vh - 20px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        border-radius: 10px;
+    }
+    
+    /* 预览警告栏手机端适配 */
+    .preview-warning {
+        padding: 8px 15px;
+        font-size: 12px;
+    }
+    
+    .warning-content {
+        padding: 0 10px;
+    }
+    
+    .warning-text {
+        font-size: 12px;
+        line-height: 1.4;
+    }
+    
+    .warning-close {
+        font-size: 20px;
+        width: 25px;
+        height: 25px;
+    }
+    
+    body.has-preview-warning {
+        padding-top: 40px;
+    }
+    
+    header {
+        margin-bottom: 20px;
+        padding: 0 10px;
     }
     
     header h1 {
-        font-size: 36px;
+        font-size: 28px;
+        margin-bottom: 15px;
+        line-height: 1.2;
+    }
+    
+    /* 语音设置面板手机端适配 */
+    .speech-settings {
+        position: static;
+        text-align: right;
+        margin-bottom: 15px;
+    }
+    
+    .speech-panel {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 90%;
+        max-width: 320px;
+        right: auto;
+        z-index: 2000;
+    }
+    
+    .question-area {
+        margin: 20px 0;
+        min-height: 150px;
+        padding: 0 10px;
     }
     
     .question-text {
-        font-size: 48px;
+        font-size: 32px;
+        margin-bottom: 20px;
+        line-height: 1.3;
+        word-break: break-word;
     }
     
     .answer-text {
-        font-size: 36px;
+        font-size: 24px;
     }
     
-    .mode-btn, .control-btn {
-        font-size: 18px;
-        padding: 15px 25px;
+    .phonetic-container {
+        gap: 15px;
+        margin-top: 5px;
+        margin-bottom: 10px;
     }
     
+    .phonetic-item {
+        padding: 6px 12px;
+        border-radius: 15px;
+        gap: 6px;
+    }
+    
+    .phonetic-label {
+        font-size: 12px;
+    }
+    
+    .phonetic-text {
+        font-size: 16px;
+        margin-top: 0;
+        margin-bottom: 0;
+    }
+    
+    /* 模式选择器手机端优化 */
     .mode-selector {
+        gap: 8px;
+        margin: 15px 0;
+    }
+    
+    .mode-btn {
+        font-size: 16px;
+        padding: 12px 20px;
+        min-width: 120px;
+        border-radius: 8px;
+        flex: 1;
+        max-width: 160px;
+    }
+    
+    /* 应用模式选择器 */
+    .app-mode-selector {
         gap: 10px;
+        margin: 15px 0;
     }
     
-    .controls {
-        gap: 20px;
+    .app-mode-btn {
+        font-size: 16px;
+        padding: 10px 18px;
+        min-width: 100px;
     }
     
-    .stats {
-        gap: 30px;
+    /* 控制按钮手机端优化 */
+    .lecture-controls {
+        gap: 15px;
+        margin: 20px 0;
+        flex-wrap: wrap;
+    }
+    
+    .quiz-controls {
+        gap: 15px;
+        margin: 20px 0;
+    }
+    
+    .control-btn {
         font-size: 18px;
+        padding: 15px 30px;
+        min-width: 150px;
+        border-radius: 12px;
+    }
+    
+    /* 答题选项手机端优化 */
+    .options-container {
+        gap: 10px;
+        max-width: 100%;
+        padding: 0 10px;
+    }
+    
+    .option-btn {
+        padding: 15px 20px;
+        font-size: 16px;
+        min-height: 50px;
+        border-radius: 10px;
+    }
+    
+    .quiz-result {
+        font-size: 18px;
+        margin: 8px 0;
+    }
+    
+    /* 统计信息手机端优化 */
+    .stats {
+        gap: 20px;
+        font-size: 16px;
+        margin: 15px 0;
+        flex-wrap: wrap;
+    }
+    
+    #answered-count, #remaining-count {
+        font-size: 20px;
+    }
+    
+    /* 文件上传区域手机端优化 */
+    .file-upload {
+        flex-direction: column;
+        gap: 10px;
+        font-size: 16px;
+        text-align: center;
+    }
+    
+    #csv-file {
+        width: 100%;
+        max-width: 280px;
+        font-size: 14px;
+        padding: 8px;
+    }
+    
+    /* 内置题库选择器 */
+    .built-in-banks {
+        flex-direction: column;
+        gap: 10px;
+        font-size: 16px;
+        text-align: center;
+    }
+    
+    #built-in-selector {
+        width: 100%;
+        max-width: 280px;
+        font-size: 14px;
+        padding: 8px 12px;
+    }
+    
+    #load-built-in {
+        font-size: 14px;
+        padding: 8px 16px;
+    }
+    
+    footer {
+        padding-top: 20px;
+        margin-top: 20px;
     }
 }
 
@@ -1165,6 +1384,227 @@ footer {
     background: #8e44ad;
     transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(155, 89, 182, 0.3);
+}
+
+/* 题库管理手机端优化 */
+@media (max-width: 768px) {
+    .bank-management {
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .bank-management h3 {
+        font-size: 20px;
+        margin-bottom: 15px;
+    }
+    
+    .available-banks, .selected-banks {
+        margin-bottom: 15px;
+    }
+    
+    .available-banks label, .selected-banks label {
+        font-size: 16px;
+        margin-bottom: 8px;
+        text-align: center;
+    }
+    
+    .bank-list, .selected-bank-list {
+        gap: 8px;
+        padding: 8px;
+        min-height: 35px;
+    }
+    
+    .bank-item {
+        padding: 6px 12px;
+        font-size: 12px;
+        border-radius: 15px;
+    }
+    
+    #load-selected-banks {
+        font-size: 16px;
+        padding: 10px 24px;
+    }
+}
+
+/* 挑战模式手机端全面优化 */
+@media (max-width: 768px) {
+    .challenge-controls {
+        gap: 15px;
+        margin: 20px 0;
+    }
+    
+    .challenge-mode-selection {
+        margin-bottom: 20px;
+        padding: 0 10px;
+    }
+    
+    .challenge-mode-selection h3 {
+        font-size: 22px;
+        margin-bottom: 15px;
+        line-height: 1.3;
+    }
+    
+    .challenge-mode-options {
+        gap: 12px;
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .challenge-mode-btn {
+        width: 100%;
+        max-width: 280px;
+        font-size: 18px;
+        padding: 12px 24px;
+        border-radius: 8px;
+    }
+    
+    .challenge-question-count {
+        margin-top: 20px;
+        padding: 15px;
+    }
+    
+    .challenge-question-count label {
+        font-size: 14px;
+        margin-right: 10px;
+        display: block;
+        margin-bottom: 8px;
+        text-align: center;
+    }
+    
+    .challenge-question-count input[type="number"] {
+        width: 100%;
+        max-width: 120px;
+        font-size: 14px;
+        padding: 8px 12px;
+    }
+    
+    .question-count-hint {
+        font-size: 12px;
+        margin-left: 0;
+        margin-top: 5px;
+        text-align: center;
+    }
+    
+    .challenge-quiz-interface {
+        gap: 15px;
+    }
+    
+    .challenge-settings {
+        flex-direction: column;
+        text-align: center;
+        gap: 10px;
+        margin-bottom: 15px;
+        padding: 12px 20px;
+    }
+    
+    .challenge-settings label {
+        font-size: 16px;
+        margin-bottom: 5px;
+    }
+    
+    #auto-switch-time {
+        width: 100%;
+        max-width: 180px;
+        font-size: 14px;
+        padding: 6px 12px;
+    }
+    
+    .challenge-timer, .challenge-score {
+        font-size: 20px;
+        padding: 8px 16px;
+        margin: 8px 0;
+    }
+    
+    .challenge-quiz-interface .options-container {
+        grid-template-columns: 1fr;
+        max-width: 100%;
+        padding: 0 10px;
+        gap: 12px;
+    }
+    
+    .challenge-quiz-interface .option-btn {
+        padding: 18px 20px;
+        font-size: 18px;
+        min-height: 55px;
+    }
+    
+    /* 挑战模式结果页面手机端优化 */
+    .challenge-results {
+        padding: 20px 15px;
+    }
+    
+    .challenge-results h2 {
+        font-size: 28px;
+        margin-bottom: 20px;
+    }
+    
+    .results-summary {
+        flex-direction: column;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 25px;
+    }
+    
+    .result-item {
+        width: 100%;
+        max-width: 200px;
+        padding: 15px;
+        min-width: auto;
+    }
+    
+    .result-item span:first-child {
+        font-size: 16px;
+        margin-bottom: 8px;
+    }
+    
+    .result-item span:last-child {
+        font-size: 28px;
+    }
+    
+    .results-details {
+        max-width: 100%;
+        padding: 0 10px;
+    }
+    
+    .results-details h3 {
+        font-size: 20px;
+        margin-bottom: 15px;
+    }
+    
+    .wrong-questions, .correct-questions {
+        margin-bottom: 20px;
+    }
+    
+    .wrong-questions h4, .correct-questions h4 {
+        font-size: 18px;
+        margin-bottom: 10px;
+    }
+    
+    .result-question {
+        padding: 12px;
+        margin-bottom: 8px;
+    }
+    
+    .result-question .question-text {
+        font-size: 16px;
+        margin-bottom: 8px;
+    }
+    
+    .answer-comparison {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .user-answer, .correct-answer {
+        font-size: 14px;
+        text-align: center;
+    }
+    
+    #restart-challenge {
+        margin-top: 20px;
+        font-size: 16px;
+        padding: 12px 24px;
+    }
 }
 
 /* 响应式设计 - 挑战模式设置 */
