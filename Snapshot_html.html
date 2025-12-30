@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>单词答题游戏</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="Snapshot_styles.css">
 </head>
 <body>
     <div class="container">
@@ -90,6 +90,11 @@
                         <button class="challenge-mode-btn" data-mode="chinese-to-english">中文→英文</button>
                         <button class="challenge-mode-btn" data-mode="english-to-chinese">英文→中文</button>
                         <button class="challenge-mode-btn" data-mode="random">随机模式</button>
+                    </div>
+                    <div class="challenge-question-count">
+                        <label for="challenge-question-count">题目数量:</label>
+                        <input type="number" id="challenge-question-count" min="5" max="100" value="20" step="5">
+                        <span class="question-count-hint">(5-100题，默认20题)</span>
                     </div>
                 </div>
                 <div class="challenge-quiz-interface" style="display: none;">
@@ -207,7 +212,7 @@
         <!-- 版本信息和反馈 -->
         <div class="version-info">
             <div class="version-text">
-                <a href="version.html">版本: 1.2.0-Snapshot2</a> |
+                <a href="version.html">版本: 1.2.0-Snapshot3</a> |
                 问题反馈: <a href="https://github.com/dhjs0000/QuizSlide/issues" target="_blank">GitHub Issues</a> 或
                 <a href="mailto:studio@ethernos.cn">studio@ethernos.cn</a>
             </div>

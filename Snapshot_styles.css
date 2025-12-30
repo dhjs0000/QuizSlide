@@ -934,6 +934,47 @@ footer {
     transform: translateY(-2px);
 }
 
+/* 挑战模式题目数量设置 */
+.challenge-question-count {
+    margin-top: 30px;
+    padding: 20px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    text-align: center;
+}
+
+.challenge-question-count label {
+    font-size: 16px;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-right: 15px;
+}
+
+.challenge-question-count input[type="number"] {
+    padding: 10px 15px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 16px;
+    width: 80px;
+    text-align: center;
+    transition: border-color 0.3s ease;
+}
+
+.challenge-question-count input[type="number"]:focus {
+    outline: none;
+    border-color: #e67e22;
+    box-shadow: 0 0 0 3px rgba(230, 126, 34, 0.1);
+}
+
+.question-count-hint {
+    font-size: 14px;
+    color: #7f8c8d;
+    margin-left: 10px;
+    display: block;
+    margin-top: 8px;
+}
+
 .challenge-quiz-interface {
     display: flex;
     flex-direction: column;

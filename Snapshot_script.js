@@ -581,16 +581,20 @@ class CSVParser {
 
 // 题库管理模块
 class QuestionBank {
-    constructor() {
+    constructor(app) {
         this.questions = [];
         this.answeredQuestions = [];
+        this.app = app; // 保存应用实例引用
     }
     
     // 加载题库
     loadQuestions(questions) {
         this.questions = [...questions];
         this.answeredQuestions = [];
-        this.updateStats();
+        // 只有在非挑战模式下才更新统计信息
+        if (!this.app || this.app.currentAppMode !== APP_MODES.CHALLENGE) {
+            this.updateStats();
+        }
     }
     
     // 获取随机题目
@@ -606,7 +610,10 @@ class QuestionBank {
         this.questions.splice(randomIndex, 1);
         this.answeredQuestions.push(question);
         
-        this.updateStats();
+        // 只有在非挑战模式下才更新统计信息
+        if (!this.app || this.app.currentAppMode !== APP_MODES.CHALLENGE) {
+            this.updateStats();
+        }
         return question;
     }
     
@@ -614,11 +621,19 @@ class QuestionBank {
     reset() {
         this.questions = [...this.answeredQuestions, ...this.questions];
         this.answeredQuestions = [];
-        this.updateStats();
+        // 只有在非挑战模式下才更新统计信息
+        if (!this.app || this.app.currentAppMode !== APP_MODES.CHALLENGE) {
+            this.updateStats();
+        }
     }
     
     // 更新统计信息
     updateStats() {
+        // 在挑战模式下，不更新这里的统计信息，由ChallengeMode处理
+        if (this.app && this.app.currentAppMode === APP_MODES.CHALLENGE) {
+            return;
+        }
+        
         document.getElementById('answered-count').textContent = this.answeredQuestions.length;
         document.getElementById('remaining-count').textContent = this.questions.length;
     }
@@ -740,6 +755,7 @@ class ChallengeMode {
         this.correctCount = 0;
         this.wrongCount = 0;
         this.totalQuestions = 0;
+        this.targetQuestionCount = 20; // 默认题目数量
         this.wrongQuestions = [];
         this.correctQuestions = [];
         this.currentChallengeMode = MODES.CHINESE_TO_ENGLISH;
@@ -747,13 +763,14 @@ class ChallengeMode {
         this.timeElapsed = 0;
     }
     
-    start() {
+    start(targetQuestionCount = 20) {
         this.isActive = true;
         this.startTime = Date.now();
         this.score = 0;
         this.correctCount = 0;
         this.wrongCount = 0;
         this.totalQuestions = 0;
+        this.targetQuestionCount = targetQuestionCount;
         this.wrongQuestions = [];
         this.correctQuestions = [];
         this.timeElapsed = 0;
@@ -806,6 +823,24 @@ class ChallengeMode {
         if (scoreElement) {
             scoreElement.textContent = this.score;
         }
+        
+        // 同时更新进度信息
+        this.updateProgressDisplay();
+    }
+    
+    updateProgressDisplay() {
+        // 更新统计信息中的进度显示
+        const answeredCountElement = document.getElementById('answered-count');
+        const remainingCountElement = document.getElementById('remaining-count');
+        
+        if (answeredCountElement) {
+            answeredCountElement.textContent = this.totalQuestions;
+        }
+        
+        if (remainingCountElement) {
+            const remaining = Math.max(0, this.targetQuestionCount - this.totalQuestions);
+            remainingCountElement.textContent = remaining;
+        }
     }
     
     recordQuestion(question, userAnswer, correctAnswer, isCorrect) {
@@ -849,7 +884,7 @@ class ChallengeMode {
 // 主应用控制器
 class QuizApp {
     constructor() {
-        this.questionBank = new QuestionBank();
+        this.questionBank = new QuestionBank(this);
         this.quizMode = new QuizMode();
         this.challengeMode = new ChallengeMode();
         this.currentQuestion = null;
@@ -974,6 +1009,22 @@ class QuizApp {
                 this.handleChallengeModeSelect(e.target.dataset.mode);
             });
         });
+        
+        // 挑战模式题数设置
+        const questionCountInput = document.getElementById('challenge-question-count');
+        if (questionCountInput) {
+            questionCountInput.addEventListener('input', (e) => {
+                let value = parseInt(e.target.value);
+                if (value < 5) e.target.value = 5;
+                if (value > 100) e.target.value = 100;
+            });
+            
+            questionCountInput.addEventListener('blur', (e) => {
+                let value = parseInt(e.target.value);
+                if (isNaN(value) || value < 5) e.target.value = 5;
+                if (value > 100) e.target.value = 100;
+            });
+        }
         
         // 自动切换时间设置
         const autoSwitchSelect = document.getElementById('auto-switch-time');
@@ -1362,8 +1413,18 @@ class QuizApp {
                 standardMode = MODES.CHINESE_TO_ENGLISH;
         }
         
+        // 获取自定义题数
+        const questionCountInput = document.getElementById('challenge-question-count');
+        const targetQuestionCount = parseInt(questionCountInput.value) || 20;
+        
+        // 验证题数范围
+        if (targetQuestionCount < 5 || targetQuestionCount > 100) {
+            this.showMessage('题目数量必须在5-100之间！', 'warning');
+            return;
+        }
+        
         this.challengeMode.currentChallengeMode = standardMode;
-        this.challengeMode.start();
+        this.challengeMode.start(targetQuestionCount);
         
         // 隐藏选择界面，显示答题界面
         this.hideChallengeModeSelection();
@@ -1397,6 +1458,18 @@ class QuizApp {
     showChallengeQuizInterface() {
         // 更新模式显示
         this.quizMode.setMode(this.challengeMode.currentChallengeMode);
+        
+        // 更新统计信息，显示目标题数
+        const answeredCountElement = document.getElementById('answered-count');
+        const remainingCountElement = document.getElementById('remaining-count');
+        
+        if (answeredCountElement) {
+            answeredCountElement.textContent = '0';
+        }
+        
+        if (remainingCountElement) {
+            remainingCountElement.textContent = this.challengeMode.targetQuestionCount;
+        }
     }
     
     // 挑战模式下一题
@@ -1406,6 +1479,13 @@ class QuizApp {
         // 清理上一题的状态
         this.clearPreviousChallengeQuestion();
         
+        // 检查是否已达到目标题数
+        if (this.challengeMode.totalQuestions >= this.challengeMode.targetQuestionCount) {
+            // 挑战结束，显示结果
+            this.showChallengeResults();
+            return;
+        }
+        
         const hasNextQuestion = this.nextQuestion();
         
         if (hasNextQuestion && this.currentQuestion) {
@@ -1413,7 +1493,7 @@ class QuizApp {
             // 确保随机模式的题目和答案选择一致
             this.displayChallengeQuestion();
         } else {
-            // 挑战结束，显示结果
+            // 题库用完，挑战结束，显示结果
             this.showChallengeResults();
         }
     }
@@ -1610,6 +1690,16 @@ class QuizApp {
         document.getElementById('accuracy').textContent = `${results.accuracy.toFixed(1)}%`;
         document.getElementById('ability-score').textContent = results.abilityScore;
         
+        // 在结果显示中添加目标题数信息
+        const resultsSummary = document.querySelector('.results-summary');
+        const targetCountItem = document.createElement('div');
+        targetCountItem.className = 'result-item';
+        targetCountItem.innerHTML = `
+            <span>目标题数:</span>
+            <span>${this.challengeMode.targetQuestionCount}</span>
+        `;
+        resultsSummary.insertBefore(targetCountItem, resultsSummary.firstChild);
+        
         // 显示错题和正确题
         this.displayChallengeQuestionResults(results);
     }
@@ -1660,6 +1750,12 @@ class QuizApp {
     restartChallenge() {
         // 隐藏结果界面
         document.querySelector('.challenge-results').style.display = 'none';
+        
+        // 清理之前添加的目标题数信息（如果存在）
+        const existingTargetCount = document.querySelector('.results-summary .result-item');
+        if (existingTargetCount && existingTargetCount.textContent.includes('目标题数')) {
+            existingTargetCount.remove();
+        }
         
         // 重置题库
         this.questionBank.reset();
