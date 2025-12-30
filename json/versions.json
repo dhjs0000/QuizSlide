@@ -1,9 +1,18 @@
 {
   "versions": [
     {
+      "version": "1.2.0-Snapshot3",
+      "type": "预览版",
+      "date": "2025-12-30",
+      "prerelease": true,
+      "features": [
+        "feat: 加入可选最多题目功能"
+      ]
+    },
+    {
       "version": "1.2.0-Snapshot2",
       "type": "预览版",
-      "date": "2026-01-15",
+      "date": "2025-12-29",
       "prerelease": true,
       "features": [
         "fix: 修复长城背景路径问题"
@@ -35,7 +44,7 @@
     {
       "version": "1.0.0",
       "type": "正式版",
-      "date": "2025-12-01",
+      "date": "2025-12-29",
       "prerelease": false,
       "features": [
         "支持三种游戏模式：讲台模式、答题模式、挑战模式",
@@ -43,6 +52,15 @@
         "内置多个英语词库",
         "支持语音朗读功能",
         "支持自定义题库文件上传"
+      ]
+    },
+    {
+      "version": "Early Test Version",
+      "type": "测试版",
+      "date": "2025-12-16",
+      "prerelease": true,
+      "features": [
+        "未知"
       ]
     }
   ]
