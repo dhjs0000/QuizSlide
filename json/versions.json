@@ -1,6 +1,33 @@
 {
   "versions": [
     {
+      "version": "1.2.0",
+      "type": "正式版",
+      "date": "2025-12-30",
+      "prerelease": false,
+      "features": [
+        "基于预览版反馈，优化和修复了一些问题"
+      ],
+      "gitTag": "1.2.0",
+      "gitCommit": "-"
+    },
+    {
+      "version": "1.2.0-PreRelease1",
+      "type": "预览版",
+      "date": "2025-12-30",
+      "prerelease": true,
+      "features": [
+        "feat: 让它支持显示美式和英式的发音",
+        "feat: 让它支持-连词复合词",
+        "feat: 让它支持但句子中只显示某单词第一个发音",
+        "feat: 支持's后缀缩写",
+        "feat: 修复sb,sth缩写发音问题",
+        "fix: 音标不准确的bug"
+      ],
+      "gitTag": "1.2.0-rc1",
+      "gitCommit": "ded3000"
+    },
+    {
       "version": "1.2.0-Snapshot3",
       "type": "预览版",
       "date": "2025-12-30",

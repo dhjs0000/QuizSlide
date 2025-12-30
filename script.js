@@ -136,6 +136,10 @@ const speechSynthesis = new SpeechSynthesis();
 // 拼音和音标转换模块
 class PhoneticConverter {
     constructor() {
+        // 存储英式音标数据
+        this.ukPhoneticData = {};
+        // 存储美式音标数据
+        this.usPhoneticData = {};
         // 简单的英文音标映射表（常用的单词）
         this.ipaDict = {
             // 基础词汇
@@ -318,8 +322,40 @@ class PhoneticConverter {
             'Thursday': 'ˈθɜrzdeɪ',
             'Friday': 'ˈfraɪdeɪ',
             'Saturday': 'ˈsætərdeɪ',
-            'Sunday': 'ˈsʌndeɪ'
+            'Sunday': 'ˈsʌndeɪ',
+            // 缩写词处理
+            'somebody': 'ˈsʌmbɑdi',
+            'something': 'ˈsʌmθɪŋ',
+            'somebody\'s': 'ˈsʌmbɑdiz',
+            'something\'s': 'ˈsʌmθɪŋz'
         };
+    }
+    
+    // 加载音标数据
+    async loadPhoneticData() {
+        try {
+            // 加载英式音标数据
+            const ukResponse = await fetch('json/en_UK.json');
+            if (ukResponse.ok) {
+                this.ukPhoneticData = await ukResponse.json();
+                console.log('英式音标数据加载完成，共' + Object.keys(this.ukPhoneticData).length + '个单词');
+            } else {
+                console.warn('英式音标数据加载失败，状态码:', ukResponse.status);
+            }
+            
+            // 加载美式音标数据
+            const usResponse = await fetch('json/en_US.json');
+            if (usResponse.ok) {
+                this.usPhoneticData = await usResponse.json();
+                console.log('美式音标数据加载完成，共' + Object.keys(this.usPhoneticData).length + '个单词');
+            } else {
+                console.warn('美式音标数据加载失败，状态码:', usResponse.status);
+            }
+            
+            console.log('音标数据加载完成');
+        } catch (error) {
+            console.warn('音标数据加载失败:', error);
+        }
     }
     
     // 获取中文拼音
@@ -408,26 +444,107 @@ class PhoneticConverter {
         return result.trim();
     }
     
-    // 获取英文音标
+    // 获取英文音标（同时返回英式和美式）
     getIPA(englishText) {
-        if (!englishText || typeof englishText !== 'string') return '';
+        if (!englishText || typeof englishText !== 'string') return { uk: '', us: '' };
         
-        const word = englishText.toLowerCase().trim();
+        let word = englishText.toLowerCase().trim();
         
-        // 首先检查内置词典
-        if (this.ipaDict[word]) {
-            return this.ipaDict[word];
+        // 扩展的缩写词处理
+        word = this.expandAbbreviations(word);
+        
+        // 首先检查JSON数据
+        let ukPhonetic = '';
+        let usPhonetic = '';
+        
+        // 从英式音标数据中查找 - 处理JSON格式 {"en_UK": [{"word": "/phonetic/"}]}
+        if (this.ukPhoneticData && this.ukPhoneticData.en_UK && Array.isArray(this.ukPhoneticData.en_UK) && this.ukPhoneticData.en_UK.length > 0) {
+            const ukDict = this.ukPhoneticData.en_UK[0];
+            if (ukDict && ukDict[word]) {
+                ukPhonetic = ukDict[word];
+            }
         }
         
-        // 尝试分解复合词
-        const words = word.split(/\s+/);
-        if (words.length > 1) {
-            const ipaParts = words.map(w => this.getIPA(w)).filter(ipa => ipa);
-            return ipaParts.join(' ');
+        // 从美式音标数据中查找 - 处理JSON格式 {"en_US": [{"word": "/phonetic/"}]}
+        if (this.usPhoneticData && this.usPhoneticData.en_US && Array.isArray(this.usPhoneticData.en_US) && this.usPhoneticData.en_US.length > 0) {
+            const usDict = this.usPhoneticData.en_US[0];
+            if (usDict && usDict[word]) {
+                usPhonetic = usDict[word];
+            }
         }
         
-        // 简单的音标生成规则（基于拼写规则）
-        return this.generateSimpleIPA(word);
+        // 如果JSON数据中没有，使用内置词典
+        if (!ukPhonetic && !usPhonetic && this.ipaDict[word]) {
+            ukPhonetic = this.ipaDict[word];
+            usPhonetic = this.ipaDict[word];
+        }
+        
+        // 处理复合词：先按连字符分割，再按空格分割
+        if (word.includes('-') || word.includes(' ')) {
+            // 先按连字符分割
+            const hyphenParts = word.split('-');
+            const ukHyphenParts = [];
+            const usHyphenParts = [];
+            let hasValidHyphenParts = false;
+            
+            hyphenParts.forEach(part => {
+                // 对每个连字符部分再按空格分割
+                const spaceWords = part.trim().split(/\s+/).filter(w => w.length > 0);
+                const ukSpaceParts = [];
+                const usSpaceParts = [];
+                let hasValidSpaceParts = false;
+                
+                spaceWords.forEach(w => {
+                    const result = this.getIPA(w);
+                    if (result.uk) {
+                        ukSpaceParts.push(result.uk);
+                        hasValidSpaceParts = true;
+                    }
+                    if (result.us) {
+                        usSpaceParts.push(result.us);
+                        hasValidSpaceParts = true;
+                    }
+                });
+                
+                if (hasValidSpaceParts) {
+                    // 对每个单词的音标，只选择第一个发音（去除多个发音选项）
+                    const ukFirstPronunciation = ukSpaceParts.map(ipa => {
+                        // 如果音标包含多个选项（用逗号分隔），只取第一个
+                        return ipa.includes(',') ? ipa.split(',')[0].trim() : ipa;
+                    });
+                    const usFirstPronunciation = usSpaceParts.map(ipa => {
+                        // 如果音标包含多个选项（用逗号分隔），只取第一个
+                        return ipa.includes(',') ? ipa.split(',')[0].trim() : ipa;
+                    });
+                    
+                    ukHyphenParts.push(ukFirstPronunciation.join(' '));
+                    usHyphenParts.push(usFirstPronunciation.join(' '));
+                    hasValidHyphenParts = true;
+                }
+            });
+            
+            // 使用连词符号（‐）连接复合词的音标
+            if (hasValidHyphenParts) {
+                return {
+                    uk: ukHyphenParts.join('‐'),
+                    us: usHyphenParts.join('‐')
+                };
+            }
+        }
+        
+        // 如果没有找到任何音标，使用简单的音标生成规则
+        if (!ukPhonetic && !usPhonetic) {
+            const simpleIPA = this.generateSimpleIPA(word);
+            return {
+                uk: simpleIPA + "*",
+                us: simpleIPA + "*"
+            };
+        }
+        
+        return {
+            uk: ukPhonetic || usPhonetic || this.generateSimpleIPA(word),
+            us: usPhonetic || ukPhonetic || this.generateSimpleIPA(word)
+        };
     }
     
     // 简单的音标生成规则
@@ -518,6 +635,60 @@ class PhoneticConverter {
         
         return ipa;
     }
+    
+    // 扩展缩写词处理
+    expandAbbreviations(word) {
+        // 处理各种形式的缩写
+        const abbreviations = {
+            'sb': 'somebody',
+            'sth': 'something',
+            "sb's": 'somebody\'s',
+            "sth's": 'something\'s',
+            'sbs': 'somebody',
+            'sths': 'something',
+            '(sb)': 'somebody',
+            '(sth)': 'something',
+            '(sb': 'somebody',
+            '(sth': 'something',
+            'sb)': 'somebody',
+            'sth)': 'something',
+            '(in)': 'in',
+            '(at)': 'at',
+            '(on)': 'on',
+            '(for)': 'for',
+            '(to)': 'to',
+            '(with)': 'with',
+            '(in': 'in',
+            '(at': 'at',
+            '(on': 'on',
+            '(for': 'for',
+            '(to': 'to',
+            '(with': 'with',
+            'in)': 'in',
+            'at)': 'at',
+            'on)': 'on',
+            'for)': 'for',
+            'to)': 'to',
+            'with)': 'with'
+        };
+        
+        // 检查是否是缩写词
+        if (abbreviations[word]) {
+            return abbreviations[word];
+        }
+        
+        // 处理带's的情况（如 somebody's, something's）
+        if (word.endsWith("'s")) {
+            const base = word.slice(0, -2);
+            if (base === 'sb') {
+                return 'somebody\'s';
+            } else if (base === 'sth') {
+                return 'something\'s';
+            }
+        }
+        
+        return word;
+    }
 }
 
 // 创建全局拼音音标转换器实例
@@ -581,16 +752,20 @@ class CSVParser {
 
 // 题库管理模块
 class QuestionBank {
-    constructor() {
+    constructor(app) {
         this.questions = [];
         this.answeredQuestions = [];
+        this.app = app; // 保存应用实例引用
     }
     
     // 加载题库
     loadQuestions(questions) {
         this.questions = [...questions];
         this.answeredQuestions = [];
-        this.updateStats();
+        // 只有在非挑战模式下才更新统计信息
+        if (!this.app || this.app.currentAppMode !== APP_MODES.CHALLENGE) {
+            this.updateStats();
+        }
     }
     
     // 获取随机题目
@@ -606,7 +781,10 @@ class QuestionBank {
         this.questions.splice(randomIndex, 1);
         this.answeredQuestions.push(question);
         
-        this.updateStats();
+        // 只有在非挑战模式下才更新统计信息
+        if (!this.app || this.app.currentAppMode !== APP_MODES.CHALLENGE) {
+            this.updateStats();
+        }
         return question;
     }
     
@@ -614,11 +792,19 @@ class QuestionBank {
     reset() {
         this.questions = [...this.answeredQuestions, ...this.questions];
         this.answeredQuestions = [];
-        this.updateStats();
+        // 只有在非挑战模式下才更新统计信息
+        if (!this.app || this.app.currentAppMode !== APP_MODES.CHALLENGE) {
+            this.updateStats();
+        }
     }
     
     // 更新统计信息
     updateStats() {
+        // 在挑战模式下，不更新这里的统计信息，由ChallengeMode处理
+        if (this.app && this.app.currentAppMode === APP_MODES.CHALLENGE) {
+            return;
+        }
+        
         document.getElementById('answered-count').textContent = this.answeredQuestions.length;
         document.getElementById('remaining-count').textContent = this.questions.length;
     }
@@ -740,6 +926,7 @@ class ChallengeMode {
         this.correctCount = 0;
         this.wrongCount = 0;
         this.totalQuestions = 0;
+        this.targetQuestionCount = 20; // 默认题目数量
         this.wrongQuestions = [];
         this.correctQuestions = [];
         this.currentChallengeMode = MODES.CHINESE_TO_ENGLISH;
@@ -747,13 +934,14 @@ class ChallengeMode {
         this.timeElapsed = 0;
     }
     
-    start() {
+    start(targetQuestionCount = 20) {
         this.isActive = true;
         this.startTime = Date.now();
         this.score = 0;
         this.correctCount = 0;
         this.wrongCount = 0;
         this.totalQuestions = 0;
+        this.targetQuestionCount = targetQuestionCount;
         this.wrongQuestions = [];
         this.correctQuestions = [];
         this.timeElapsed = 0;
@@ -806,6 +994,24 @@ class ChallengeMode {
         if (scoreElement) {
             scoreElement.textContent = this.score;
         }
+        
+        // 同时更新进度信息
+        this.updateProgressDisplay();
+    }
+    
+    updateProgressDisplay() {
+        // 更新统计信息中的进度显示
+        const answeredCountElement = document.getElementById('answered-count');
+        const remainingCountElement = document.getElementById('remaining-count');
+        
+        if (answeredCountElement) {
+            answeredCountElement.textContent = this.totalQuestions;
+        }
+        
+        if (remainingCountElement) {
+            const remaining = Math.max(0, this.targetQuestionCount - this.totalQuestions);
+            remainingCountElement.textContent = remaining;
+        }
     }
     
     recordQuestion(question, userAnswer, correctAnswer, isCorrect) {
@@ -849,7 +1055,7 @@ class ChallengeMode {
 // 主应用控制器
 class QuizApp {
     constructor() {
-        this.questionBank = new QuestionBank();
+        this.questionBank = new QuestionBank(this);
         this.quizMode = new QuizMode();
         this.challengeMode = new ChallengeMode();
         this.currentQuestion = null;
@@ -874,6 +1080,14 @@ class QuizApp {
         
         this.initializeEventListeners();
         this.initializeBackgroundSettings();
+        
+        // 加载音标数据
+        this.loadPhoneticData();
+    }
+    
+    // 加载音标数据
+    async loadPhoneticData() {
+        await phoneticConverter.loadPhoneticData();
     }
     
     // 初始化背景设置
@@ -943,12 +1157,14 @@ class QuizApp {
         }
     }
     
-    // 更新主界面透明度
+    // 更新主界面透明度（只调节背景颜色透明度）
     updateContainerTransparency(opacity) {
         const container = document.querySelector('.container');
         if (container) {
-            container.style.opacity = opacity;
-            container.style.transition = 'opacity 0.3s ease';
+            // 获取原始背景颜色（白色）并转换为RGBA格式
+            const baseColor = '255, 255, 255'; // 白色的RGB值
+            container.style.backgroundColor = `rgba(${baseColor}, ${opacity})`;
+            container.style.transition = 'background-color 0.3s ease';
         }
     }
     
@@ -972,6 +1188,22 @@ class QuizApp {
                 this.handleChallengeModeSelect(e.target.dataset.mode);
             });
         });
+        
+        // 挑战模式题数设置
+        const questionCountInput = document.getElementById('challenge-question-count');
+        if (questionCountInput) {
+            questionCountInput.addEventListener('input', (e) => {
+                let value = parseInt(e.target.value);
+                if (value < 5) e.target.value = 5;
+                if (value > 100) e.target.value = 100;
+            });
+            
+            questionCountInput.addEventListener('blur', (e) => {
+                let value = parseInt(e.target.value);
+                if (isNaN(value) || value < 5) e.target.value = 5;
+                if (value > 100) e.target.value = 100;
+            });
+        }
         
         // 自动切换时间设置
         const autoSwitchSelect = document.getElementById('auto-switch-time');
@@ -1360,8 +1592,18 @@ class QuizApp {
                 standardMode = MODES.CHINESE_TO_ENGLISH;
         }
         
+        // 获取自定义题数
+        const questionCountInput = document.getElementById('challenge-question-count');
+        const targetQuestionCount = parseInt(questionCountInput.value) || 20;
+        
+        // 验证题数范围
+        if (targetQuestionCount < 5 || targetQuestionCount > 100) {
+            this.showMessage('题目数量必须在5-100之间！', 'warning');
+            return;
+        }
+        
         this.challengeMode.currentChallengeMode = standardMode;
-        this.challengeMode.start();
+        this.challengeMode.start(targetQuestionCount);
         
         // 隐藏选择界面，显示答题界面
         this.hideChallengeModeSelection();
@@ -1395,6 +1637,18 @@ class QuizApp {
     showChallengeQuizInterface() {
         // 更新模式显示
         this.quizMode.setMode(this.challengeMode.currentChallengeMode);
+        
+        // 更新统计信息，显示目标题数
+        const answeredCountElement = document.getElementById('answered-count');
+        const remainingCountElement = document.getElementById('remaining-count');
+        
+        if (answeredCountElement) {
+            answeredCountElement.textContent = '0';
+        }
+        
+        if (remainingCountElement) {
+            remainingCountElement.textContent = this.challengeMode.targetQuestionCount;
+        }
     }
     
     // 挑战模式下一题
@@ -1404,6 +1658,13 @@ class QuizApp {
         // 清理上一题的状态
         this.clearPreviousChallengeQuestion();
         
+        // 检查是否已达到目标题数
+        if (this.challengeMode.totalQuestions >= this.challengeMode.targetQuestionCount) {
+            // 挑战结束，显示结果
+            this.showChallengeResults();
+            return;
+        }
+        
         const hasNextQuestion = this.nextQuestion();
         
         if (hasNextQuestion && this.currentQuestion) {
@@ -1411,7 +1672,7 @@ class QuizApp {
             // 确保随机模式的题目和答案选择一致
             this.displayChallengeQuestion();
         } else {
-            // 挑战结束，显示结果
+            // 题库用完，挑战结束，显示结果
             this.showChallengeResults();
         }
     }
@@ -1608,6 +1869,16 @@ class QuizApp {
         document.getElementById('accuracy').textContent = `${results.accuracy.toFixed(1)}%`;
         document.getElementById('ability-score').textContent = results.abilityScore;
         
+        // 在结果显示中添加目标题数信息
+        const resultsSummary = document.querySelector('.results-summary');
+        const targetCountItem = document.createElement('div');
+        targetCountItem.className = 'result-item';
+        targetCountItem.innerHTML = `
+            <span>目标题数:</span>
+            <span>${this.challengeMode.targetQuestionCount}</span>
+        `;
+        resultsSummary.insertBefore(targetCountItem, resultsSummary.firstChild);
+        
         // 显示错题和正确题
         this.displayChallengeQuestionResults(results);
     }
@@ -1658,6 +1929,12 @@ class QuizApp {
     restartChallenge() {
         // 隐藏结果界面
         document.querySelector('.challenge-results').style.display = 'none';
+        
+        // 清理之前添加的目标题数信息（如果存在）
+        const existingTargetCount = document.querySelector('.results-summary .result-item');
+        if (existingTargetCount && existingTargetCount.textContent.includes('目标题数')) {
+            existingTargetCount.remove();
+        }
         
         // 重置题库
         this.questionBank.reset();
@@ -1776,36 +2053,64 @@ class QuizApp {
         const questionText = this.quizMode.getQuestionText(this.currentQuestion);
         console.log(`[DEBUG] displayQuestionPhonetic - questionText: "${questionText}"`);
         
-        const questionPhoneticElement = document.getElementById('question-phonetic');
+        // 获取音标容器
+        const questionPhoneticContainer = document.getElementById('question-phonetic');
         
         // 清空之前的内容
-        questionPhoneticElement.textContent = '';
+        questionPhoneticContainer.innerHTML = '';
         
         // 根据当前题目显示的语言类型来决定显示拼音还是音标
-        // 使用与getQuestionText()相同的逻辑来判断语言类型
         const currentLanguage = this.quizMode.getCurrentQuestionLanguage(this.currentQuestion);
         console.log(`[DEBUG] displayQuestionPhonetic - currentLanguage: "${currentLanguage}"`);
         
         if (currentLanguage === 'english') {
-            // 英文显示音标
+            // 英文显示音标 - 动态生成英式和美式音标结构
             const ipa = phoneticConverter.getIPA(questionText);
-            console.log(`[DEBUG] English mode - IPA result: "${ipa}"`);
-            if (ipa) {
-                questionPhoneticElement.textContent = `[${ipa}]`;
-                console.log(`[DEBUG] Set phonetic text to: [${ipa}]`);
+            console.log(`[DEBUG] English mode - IPA result:`, ipa);
+            if (ipa && (ipa.uk || ipa.us)) {
+                // 创建英式音标项
+                if (ipa.uk) {
+                    const ukItem = this.createPhoneticItem('英式', `[${ipa.uk}]`);
+                    questionPhoneticContainer.appendChild(ukItem);
+                }
+                
+                // 创建美式音标项
+                if (ipa.us) {
+                    const usItem = this.createPhoneticItem('美式', `[${ipa.us}]`);
+                    questionPhoneticContainer.appendChild(usItem);
+                }
             }
         } else if (currentLanguage === 'chinese') {
-            // 中文显示拼音
+            // 中文显示拼音 - 动态生成拼音结构
             const pinyin = phoneticConverter.getPinyin(questionText);
             console.log(`[DEBUG] Chinese mode - Pinyin result: "${pinyin}"`);
             if (pinyin) {
-                questionPhoneticElement.textContent = pinyin;
-                console.log(`[DEBUG] Set phonetic text to: ${pinyin}`);
+                const pinyinItem = this.createPhoneticItem('', pinyin);
+                questionPhoneticContainer.appendChild(pinyinItem);
             }
         }
         
-        console.log(`[DEBUG] Final phonetic element text: "${questionPhoneticElement.textContent}"`);
         console.log('[DEBUG] ===== displayQuestionPhonetic() END =====');
+    }
+    
+    // 创建音标显示项
+    createPhoneticItem(label, text) {
+        const item = document.createElement('div');
+        item.className = 'phonetic-item';
+        
+        if (label) {
+            const labelSpan = document.createElement('span');
+            labelSpan.className = 'phonetic-label';
+            labelSpan.textContent = label + ':';
+            item.appendChild(labelSpan);
+        }
+        
+        const textSpan = document.createElement('span');
+        textSpan.className = 'phonetic-text';
+        textSpan.textContent = text;
+        item.appendChild(textSpan);
+        
+        return item;
     }
     
     // 显示答案拼音或音标
@@ -1813,17 +2118,37 @@ class QuizApp {
         if (!this.currentQuestion) return;
         
         const answerText = this.quizMode.getAnswerText(this.currentQuestion);
-        const answerPhoneticElement = document.getElementById('answer-phonetic');
+        
+        // 获取答案音标容器
+        const answerPhoneticContainer = document.getElementById('answer-phonetic');
+        
+        // 清空之前的内容
+        answerPhoneticContainer.innerHTML = '';
         
         // 根据文本内容判断是中文还是英文
         if (speechSynthesis.containsEnglish(answerText)) {
-            // 英文显示音标
+            // 英文显示音标 - 动态生成英式和美式音标结构
             const ipa = phoneticConverter.getIPA(answerText);
-            answerPhoneticElement.textContent = ipa ? `[${ipa}]` : '';
+            if (ipa && (ipa.uk || ipa.us)) {
+                // 创建英式音标项
+                if (ipa.uk) {
+                    const ukItem = this.createPhoneticItem('英式', `[${ipa.uk}]`);
+                    answerPhoneticContainer.appendChild(ukItem);
+                }
+                
+                // 创建美式音标项
+                if (ipa.us) {
+                    const usItem = this.createPhoneticItem('美式', `[${ipa.us}]`);
+                    answerPhoneticContainer.appendChild(usItem);
+                }
+            }
         } else {
-            // 中文显示拼音
+            // 中文显示拼音 - 动态生成拼音结构
             const pinyin = phoneticConverter.getPinyin(answerText);
-            answerPhoneticElement.textContent = pinyin;
+            if (pinyin) {
+                const pinyinItem = this.createPhoneticItem('', pinyin);
+                answerPhoneticContainer.appendChild(pinyinItem);
+            }
         }
     }
     
@@ -1979,6 +2304,9 @@ class QuizApp {
             }
             const questionText = this.quizMode.getQuestionText(this.currentQuestion);
             document.getElementById('question').textContent = questionText;
+            
+            // 显示拼音或音标
+            this.displayQuestionPhonetic();
         } else if (this.currentAppMode === APP_MODES.QUIZ) {
             this.displayQuizQuestion();
         }
@@ -2009,14 +2337,16 @@ class QuizApp {
     // 隐藏答案
     hideAnswer() {
         const answerElement = document.getElementById('answer');
-        const answerPhoneticElement = document.getElementById('answer-phonetic');
+        const answerPhoneticContainer = document.getElementById('answer-phonetic');
         
         answerElement.classList.remove('show');
         answerElement.classList.add('hidden');
         answerElement.textContent = '';
         
         // 同时隐藏答案的拼音或音标
-        answerPhoneticElement.textContent = '';
+        if (answerPhoneticContainer) {
+            answerPhoneticContainer.innerHTML = '';
+        }
     }
     
     // 显示完成信息
@@ -2261,6 +2591,9 @@ class QuizApp {
         // 移除HTML标签
         text = text.replace(/<[^>]*>/g, '');
         
+        // 扩展缩写词处理（用于发音）
+        text = this.expandAbbreviationsForSpeech(text);
+        
         // 移除特殊字符，但保留字母、数字、空格和基本标点
         text = text.replace(/[^\w\s.,!?()-]/g, '');
         
@@ -2268,6 +2601,31 @@ class QuizApp {
         text = text.trim().replace(/\s+/g, ' ');
         
         return text;
+    }
+    
+    // 为发音功能扩展缩写词处理
+    expandAbbreviationsForSpeech(text) {
+        // 处理各种形式的缩写，包括带's的情况
+        const abbreviations = {
+            'sb': 'somebody',
+            'sth': 'something',
+            'sbs': 'somebody',
+            'sths': 'something'
+        };
+        
+        let result = text;
+        
+        // 替换独立的缩写词
+        Object.keys(abbreviations).forEach(abbr => {
+            const regex = new RegExp('\\b' + abbr + '\\b', 'gi');
+            result = result.replace(regex, abbreviations[abbr]);
+        });
+        
+        // 处理带's的情况（如 somebody's, something's）
+        result = result.replace(/\bsb's\b/gi, 'somebody\'s');
+        result = result.replace(/\bsth's\b/gi, 'something\'s');
+        
+        return result;
     }
     
     // 更新发音按钮显示

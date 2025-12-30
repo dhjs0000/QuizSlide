@@ -56,9 +56,9 @@
         <main>
             <div class="question-area">
                 <div id="question" class="question-text">在下方选择题库后开始答题</div>
-                <div id="question-phonetic" class="phonetic-text"></div>
+                <div id="question-phonetic" class="phonetic-container"></div>
                 <div id="answer" class="answer-text hidden"></div>
-                <div id="answer-phonetic" class="phonetic-text"></div>
+                <div id="answer-phonetic" class="phonetic-container"></div>
                 <button id="speak-btn" class="speak-btn" title="点击发音" style="display: none;">
                     🔊 发音
                 </button>
@@ -90,6 +90,11 @@
                         <button class="challenge-mode-btn" data-mode="chinese-to-english">中文→英文</button>
                         <button class="challenge-mode-btn" data-mode="english-to-chinese">英文→中文</button>
                         <button class="challenge-mode-btn" data-mode="random">随机模式</button>
+                    </div>
+                    <div class="challenge-question-count">
+                        <label for="challenge-question-count">题目数量:</label>
+                        <input type="number" id="challenge-question-count" min="5" max="100" value="20" step="5">
+                        <span class="question-count-hint">(5-100题，默认20题)</span>
                     </div>
                 </div>
                 <div class="challenge-quiz-interface" style="display: none;">
@@ -191,7 +196,10 @@
                 <label>选择背景:</label>
                 <select id="background-selector">
                     <option value="none">无背景</option>
-                    <option value="images/BA.jpg">默认背景</option>
+                    <option value="images/BA.jpg">Game "Blue Archive" Wallpaper - Dark</option>
+                    <option value="images/BA_Light.jpg">Game "Blue Archive" Wallpaper - Light</option>
+                    <option value="images/HZXH.jpg">Hangzhou West Lake</option>
+                    <option value="images/Great Wall.png">The Great Wall of China</option>
                 </select>
             </div>
             <div class="transparency-options">
@@ -204,18 +212,18 @@
         <!-- 版本信息和反馈 -->
         <div class="version-info">
             <div class="version-text">
-                <a href="version.html">版本: 1.1.0</a> |
+                <a href="version.html">版本: 1.2.0</a> |
                 问题反馈: <a href="https://github.com/dhjs0000/QuizSlide/issues" target="_blank">GitHub Issues</a> 或
                 <a href="mailto:studio@ethernos.cn">studio@ethernos.cn</a>
             </div>
         </div>
     </div>
         <!-- 中文拼音转换库 -->
-    <script src="pinyin-pro.js"></script>
-    <!-- 英文音标数据 -->
-    <script src="json/en_US.json" type="application/json"></script>
-    <script src="json/en_UK.json" type="application/json"></script>
-    <script src="script.js"></script>
+        <script src="pinyin-pro.js"></script>
+        <!-- 英文音标数据 -->
+        <script src="json/en_US.json" type="application/json"></script>
+        <script src="json/en_UK.json" type="application/json"></script>
+        <script src="script.js"></script>
     <script src="main.js"></script>
 </body>
 </html>
