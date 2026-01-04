@@ -205,7 +205,6 @@ body.has-preview-warning {
 }
 
 .preview-btn:hover {
-    transform: translateY(-2px);
     box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
 }
 

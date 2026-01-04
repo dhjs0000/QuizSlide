@@ -10,7 +10,8 @@ let builtInQuestionBanks = {}; // 内置题库
 const APP_MODES = {
     LECTURE: 'lecture-mode',
     QUIZ: 'quiz-mode',
-    CHALLENGE: 'challenge-mode'
+    CHALLENGE: 'challenge-mode',
+    PVP: 'pvp-mode'
 };
 
 // 答题模式定义
@@ -1176,6 +1177,11 @@ class QuizApp {
                 // 如果在挑战模式中，禁止切换模式，除非点击重新开始
                 if (this.currentAppMode === APP_MODES.CHALLENGE && e.target.id !== 'challenge-mode') {
                     this.showMessage('挑战模式中，请先完成挑战或点击重新开始！', 'warning');
+                    return;
+                }
+                // 处理双人对战模式跳转
+                if (e.target.id === 'pvp-mode') {
+                    window.location.href = 'Snapshot_pvp.html';
                     return;
                 }
                 this.handleAppModeChange(e.target.id);

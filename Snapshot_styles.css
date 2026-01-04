@@ -94,7 +94,6 @@ body.has-preview-warning {
 }
 
 .preview-btn:hover {
-    transform: translateY(-2px);
     box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
 }
 
@@ -128,7 +127,6 @@ body.has-preview-warning {
 }
 
 .speak-btn:hover {
-    transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
 }
 
@@ -262,7 +260,6 @@ header h1 {
 }
 
 .speech-settings-btn:hover {
-    transform: translateY(-1px);
     box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
 }
 
@@ -338,7 +335,6 @@ header h1 {
 
 .close-panel-btn:hover {
     background: #7f8c8d;
-    transform: translateY(-1px);
 }
 
 .mode-selector {
@@ -364,7 +360,6 @@ header h1 {
 .mode-btn:hover {
     background: #3498db;
     color: white;
-    transform: translateY(-2px);
 }
 
 .mode-btn.active {
@@ -437,7 +432,6 @@ main {
 .app-mode-btn:hover {
     background: #e67e22;
     color: white;
-    transform: translateY(-2px);
 }
 
 .app-mode-btn.active {
@@ -467,7 +461,6 @@ main {
 }
 
 .preview-btn:hover {
-    transform: translateY(-1px);
     box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
 }
 
@@ -516,7 +509,6 @@ main {
 .option-btn:hover {
     background: #3498db;
     color: white;
-    transform: translateY(-2px);
 }
 
 .option-btn.correct {
@@ -570,7 +562,6 @@ main {
 
 #show-answer:hover {
     background: #c0392b;
-    transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(231, 76, 60, 0.3);
 }
 
@@ -581,7 +572,6 @@ main {
 
 #next-question:hover {
     background: #229954;
-    transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(39, 174, 96, 0.3);
 }
 
@@ -653,7 +643,6 @@ footer {
 
 #load-built-in:hover {
     background: #8e44ad;
-    transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(155, 89, 182, 0.3);
 }
 
@@ -1078,7 +1067,6 @@ footer {
 
 .bank-item:hover {
     background: #2980b9;
-    transform: translateY(-1px);
 }
 
 .bank-item.selected {
@@ -1104,7 +1092,6 @@ footer {
 
 #load-selected-banks:hover {
     background: #8e44ad;
-    transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(155, 89, 182, 0.3);
 }
 
@@ -1150,7 +1137,6 @@ footer {
 .challenge-mode-btn:hover {
     background: #e67e22;
     color: white;
-    transform: translateY(-2px);
 }
 
 /* 挑战模式题目数量设置 */
@@ -1382,7 +1368,6 @@ footer {
 
 #restart-challenge:hover {
     background: #8e44ad;
-    transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(155, 89, 182, 0.3);
 }
 
