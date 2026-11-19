@@ -1,0 +1,292 @@
+/* 题库与挑战模式的移动端、低高度屏幕适配 */
+/* 题库管理手机端优化 */
+@media (max-width: 768px) {
+    .bank-management {
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .bank-management h3 {
+        font-size: 20px;
+        margin-bottom: 15px;
+    }
+    
+    .available-banks, .selected-banks {
+        margin-bottom: 15px;
+    }
+    
+    .available-banks label, .selected-banks label {
+        font-size: 16px;
+        margin-bottom: 8px;
+        text-align: center;
+    }
+    
+    .bank-list, .selected-bank-list {
+        gap: 8px;
+        padding: 8px;
+        min-height: 35px;
+    }
+    
+    .bank-item {
+        padding: 6px 12px;
+        font-size: 12px;
+        border-radius: 15px;
+    }
+    
+    #load-selected-banks {
+        font-size: 16px;
+        padding: 10px 24px;
+    }
+}
+
+/* 挑战模式手机端全面优化 */
+@media (max-width: 768px) {
+    .challenge-controls {
+        gap: 15px;
+        margin: 20px 0;
+    }
+    
+    .challenge-mode-selection {
+        margin-bottom: 20px;
+        padding: 0 10px;
+    }
+    
+    .challenge-mode-selection h3 {
+        font-size: 22px;
+        margin-bottom: 15px;
+        line-height: 1.3;
+    }
+    
+    .challenge-mode-options {
+        gap: 12px;
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .challenge-mode-btn {
+        width: 100%;
+        max-width: 280px;
+        font-size: 18px;
+        padding: 12px 24px;
+        border-radius: 8px;
+    }
+    
+    .challenge-question-count {
+        margin-top: 20px;
+        padding: 15px;
+    }
+    
+    .challenge-question-count label {
+        font-size: 14px;
+        margin-right: 10px;
+        display: block;
+        margin-bottom: 8px;
+        text-align: center;
+    }
+    
+    .challenge-question-count input[type="number"] {
+        width: 100%;
+        max-width: 120px;
+        font-size: 14px;
+        padding: 8px 12px;
+    }
+    
+    .question-count-hint {
+        font-size: 12px;
+        margin-left: 0;
+        margin-top: 5px;
+        text-align: center;
+    }
+    
+    .challenge-quiz-interface {
+        gap: 15px;
+    }
+    
+    .challenge-settings {
+        flex-direction: column;
+        text-align: center;
+        gap: 10px;
+        margin-bottom: 15px;
+        padding: 12px 20px;
+    }
+    
+    .challenge-settings label {
+        font-size: 16px;
+        margin-bottom: 5px;
+    }
+    
+    #auto-switch-time {
+        width: 100%;
+        max-width: 180px;
+        font-size: 14px;
+        padding: 6px 12px;
+    }
+    
+    .challenge-timer, .challenge-score {
+        font-size: 20px;
+        padding: 8px 16px;
+        margin: 8px 0;
+    }
+    
+    .challenge-quiz-interface .options-container {
+        grid-template-columns: 1fr;
+        max-width: 100%;
+        padding: 0 10px;
+        gap: 12px;
+    }
+    
+    .challenge-quiz-interface .option-btn {
+        padding: 18px 20px;
+        font-size: 18px;
+        min-height: 55px;
+    }
+    
+    /* 挑战模式结果页面手机端优化 */
+    .challenge-results {
+        padding: 20px 15px;
+    }
+    
+    .challenge-results h2 {
+        font-size: 28px;
+        margin-bottom: 20px;
+    }
+    
+    .results-summary {
+        flex-direction: column;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 25px;
+    }
+    
+    .result-item {
+        width: 100%;
+        max-width: 200px;
+        padding: 15px;
+        min-width: auto;
+    }
+    
+    .result-item span:first-child {
+        font-size: 16px;
+        margin-bottom: 8px;
+    }
+    
+    .result-item span:last-child {
+        font-size: 28px;
+    }
+    
+    .results-details {
+        max-width: 100%;
+        padding: 0 10px;
+    }
+    
+    .results-details h3 {
+        font-size: 20px;
+        margin-bottom: 15px;
+    }
+    
+    .wrong-questions, .correct-questions {
+        margin-bottom: 20px;
+    }
+    
+    .wrong-questions h4, .correct-questions h4 {
+        font-size: 18px;
+        margin-bottom: 10px;
+    }
+    
+    .result-question {
+        padding: 12px;
+        margin-bottom: 8px;
+    }
+    
+    .result-question .question-text {
+        font-size: 16px;
+        margin-bottom: 8px;
+    }
+    
+    .answer-comparison {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .user-answer, .correct-answer {
+        font-size: 14px;
+        text-align: center;
+    }
+    
+    #restart-challenge {
+        margin-top: 20px;
+        font-size: 16px;
+        padding: 12px 24px;
+    }
+}
+
+/* 响应式设计 - 挑战模式设置 */
+@media (max-width: 768px) {
+    .challenge-settings {
+        flex-direction: column;
+        text-align: center;
+        gap: 10px;
+    }
+    
+    .challenge-settings label {
+        margin-bottom: 5px;
+    }
+    
+    #auto-switch-time {
+        width: 100%;
+        max-width: 200px;
+    }
+}
+
+/* 挑战模式响应式设计 */
+@media (max-width: 768px) {
+    .challenge-mode-options {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .challenge-mode-btn {
+        width: 100%;
+        max-width: 300px;
+    }
+    
+    .challenge-quiz-interface .options-container {
+        grid-template-columns: 1fr;
+        max-width: 400px;
+    }
+    
+    .results-summary {
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+    }
+    
+    .answer-comparison {
+        flex-direction: column;
+        gap: 10px;
+    }
+}
+
+@media (min-width: 1920px) {
+    .challenge-mode-selection h3 {
+        font-size: 32px;
+    }
+    
+    .challenge-mode-btn {
+        font-size: 24px;
+        padding: 20px 40px;
+    }
+    
+    .challenge-timer, .challenge-score {
+        font-size: 28px;
+        padding: 15px 25px;
+    }
+    
+    .results-details h3 {
+        font-size: 28px;
+    }
+    
+    .wrong-questions h4, .correct-questions h4 {
+        font-size: 24px;
+    }
+}

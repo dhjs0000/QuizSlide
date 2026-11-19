@@ -1,0 +1,162 @@
+/* 版本说明页专用样式 */
+.version-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px 20px;
+}
+
+.version-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.version-header h1 {
+    font-size: 36px;
+    color: #2c3e50;
+    margin-bottom: 10px;
+}
+
+.version-header p {
+    font-size: 18px;
+    color: #7f8c8d;
+}
+
+.version-list {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    padding: 30px;
+    margin-bottom: 30px;
+}
+
+.version-item {
+    border-bottom: 1px solid #ecf0f1;
+    padding: 25px 0;
+    position: relative;
+}
+
+.version-item:last-child {
+    border-bottom: none;
+}
+
+.version-header-info {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.version-number {
+    font-size: 24px;
+    font-weight: bold;
+    color: #3498db;
+}
+
+.version-date {
+    font-size: 14px;
+    color: #95a5a6;
+}
+
+.version-features {
+    list-style: none;
+    padding-left: 0;
+    margin-top: 15px;
+}
+
+.version-features li {
+    font-size: 16px;
+    color: #2c3e50;
+    margin-bottom: 8px;
+    padding-left: 25px;
+    position: relative;
+    line-height: 1.5;
+}
+
+.version-features li:before {
+    content: "•";
+    position: absolute;
+    left: 0;
+    color: #3498db;
+    font-weight: bold;
+    font-size: 20px;
+}
+
+.back-button {
+    display: inline-block;
+    padding: 12px 30px;
+    background: #3498db;
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+.back-button:hover {
+    background: #2980b9;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+}
+
+.button-container {
+    text-align: center;
+    margin-top: 30px;
+}
+
+.loading {
+    text-align: center;
+    padding: 40px;
+    color: #7f8c8d;
+}
+
+.error {
+    text-align: center;
+    padding: 40px;
+    color: #e74c3c;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .version-header h1 {
+        font-size: 28px;
+    }
+
+    .version-list {
+        padding: 20px;
+    }
+
+    .version-number {
+        font-size: 20px;
+    }
+
+    .version-header-info {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+
+    .version-features li {
+        font-size: 14px;
+    }
+}
+
+@media (min-width: 1920px) {
+    .version-header h1 {
+        font-size: 42px;
+    }
+
+    .version-header p {
+        font-size: 20px;
+    }
+
+    .version-number {
+        font-size: 28px;
+    }
+
+    .version-features li {
+        font-size: 18px;
+    }
+}

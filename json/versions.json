@@ -1,32 +1,26 @@
 {
   "versions": [
     {
-      "version": "1.3.0-snapshot1",
-      "type": "预览版",
+      "version": "1.3.0",
       "date": "2026-1-4",
-      "prerelease": true,
       "features": [
         "feat: 添加了PVP模式"
       ],
-      "gitTag": "1.3.0-snapshot1",
+      "gitTag": "1.3.0",
       "gitCommit": "1e07e73"
     },
     {
       "version": "1.2.0",
-      "type": "正式版",
       "date": "2025-12-30",
-      "prerelease": false,
       "features": [
-        "基于预览版反馈，优化和修复了一些问题"
+        "基于测试反馈，优化和修复了一些问题"
       ],
       "gitTag": "1.2.0",
       "gitCommit": "020daf4"
     },
     {
       "version": "1.2.0-PreRelease1",
-      "type": "预览版",
       "date": "2025-12-30",
-      "prerelease": true,
       "features": [
         "feat: 让它支持显示美式和英式的发音",
         "feat: 让它支持-连词复合词",
@@ -40,27 +34,21 @@
     },
     {
       "version": "1.2.0-Snapshot3",
-      "type": "预览版",
       "date": "2025-12-30",
-      "prerelease": true,
       "features": [
         "feat: 加入可选最多题目功能"
       ]
     },
     {
       "version": "1.2.0-Snapshot2",
-      "type": "预览版",
       "date": "2025-12-29",
-      "prerelease": true,
       "features": [
         "fix: 修复长城背景路径问题"
       ]
     },
     {
       "version": "1.2.0-Snapshot1",
-      "type": "预览版",
       "date": "2025-12-29",
-      "prerelease": true,
       "features": [
         "feat: 修改透明度只会影响背景颜色透明度，不再影响所有子元素透明度",
         "feat: 加入了更多预设背景图片选项"
@@ -68,9 +56,7 @@
     },
     {
       "version": "1.1.0",
-      "type": "正式版",
       "date": "2025-12-29",
-      "prerelease": false,
       "features": [
         "feat: 添加了背景功能 - 支持自定义背景图片和界面透明度调节",
         "feat: 优化了用户界面体验",
@@ -81,9 +67,7 @@
     },
     {
       "version": "1.0.0",
-      "type": "正式版",
       "date": "2025-12-29",
-      "prerelease": false,
       "features": [
         "支持三种游戏模式：讲台模式、答题模式、挑战模式",
         "支持中英文互转学习",
@@ -94,9 +78,7 @@
     },
     {
       "version": "Early Test Version",
-      "type": "测试版",
       "date": "2025-12-16",
-      "prerelease": true,
       "features": [
         "未知"
       ]

@@ -1,24 +1,68 @@
 {
   "csvFiles": [
     {
-      "fileName": "旧课标七年级到八年级上册重点单词.csv",
-      "displayName": "旧课标初中重点单词"
-    },
-    {
-      "fileName": "2024新课标八年级下册Unit1-Unit5.csv",
-      "displayName": "八年级下册1-5单元"
-    },
-    {
-      "fileName": "2024新课标八年级下册Unit6-Unit8.csv",
-      "displayName": "八年级下册6-8单元"
-    },
-    {
       "fileName": "2024新课标七年级上册全.csv",
       "displayName": "七年级上册全"
     },
     {
       "fileName": "2024新课标七年级下册全.csv",
       "displayName": "七年级下册全"
+    },
+    {
+      "fileName": "2024新课标八年级上册Unit1-Unit5.csv",
+      "displayName": "八年级上册1-5单元"
+    },
+    {
+      "fileName": "2024新课标八年级上册Unit6-Unit8.csv",
+      "displayName": "八年级上册6-8单元"
+    },
+    {
+      "fileName": "新课标八年级上册固定搭配50个.csv",
+      "displayName": "八年级上册固定搭配50个"
+    },
+    {
+      "fileName": "新课标八年级上册精选重点词汇50个(1)范围Unit1-5.csv",
+      "displayName": "八年级上册精选词汇50个(1) Unit1-5"
+    },
+    {
+      "fileName": "新课标八年级上册精选重点词汇50个(2)范围Unit1-5.csv",
+      "displayName": "八年级上册精选词汇50个(2) Unit1-5"
+    },
+    {
+      "fileName": "新课标八年级上册精选重点词汇50个(3)范围Unit6-8.csv",
+      "displayName": "八年级上册精选词汇50个(3) Unit6-8"
+    },
+    {
+      "fileName": "2024新课标九年级上册Unit1.csv",
+      "displayName": "九年级上册Unit 1"
+    },
+    {
+      "fileName": "2024新课标九年级上册Unit2.csv",
+      "displayName": "九年级上册Unit 2"
+    },
+    {
+      "fileName": "2024新课标九年级上册Unit3.csv",
+      "displayName": "九年级上册Unit 3"
+    },
+    {
+      "fileName": "2024新课标九年级上册Unit4.csv",
+      "displayName": "九年级上册Unit 4"
+    },
+    {
+      "fileName": "2024新课标九年级上册Unit5.csv",
+      "displayName": "九年级上册Unit 5"
+    },
+    {
+      "fileName": "2024新课标九年级上册Unit6.csv",
+      "displayName": "九年级上册Unit 6"
+    },
+    {
+      "fileName": "2024新课标九年级上册Unit7.csv",
+      "displayName": "九年级上册Unit 7"
+    },
+    {
+      "fileName": "旧课标七年级到八年级上册重点单词.csv",
+      "displayName": "旧课标初中重点单词"
     }
   ],
   "note": "这个文件用于当自动扫描data文件夹失败时作为备用方案"
